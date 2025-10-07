@@ -10,8 +10,42 @@ permissions:
   pull-requests: write
 
 jobs:
+  prefix-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prefix PR title with branch name
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            // Skip forks (token will not have write permissions)
+            if (pr.head.repo.full_name !== pr.base.repo.full_name) {
+              console.log("⚠️ PR is from a fork — skipping title prefixing");
+              return;
+            }
+
+            const { owner, repo } = context.repo;
+            const branchName = pr.head.ref;
+            const prefix = `${branchName}: `;
+
+            if ((pr.title || "").startsWith(prefix)) {
+              console.log("ℹ️ Title already prefixed with branch name");
+              return;
+            }
+
+            const updatedTitle = `${prefix}${pr.title}`;
+            await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: pr.number,
+              title: updatedTitle
+            });
+            console.log(`✅ Prefixed PR title with branch name: "${updatedTitle}"`);
+
   link:
     runs-on: ubuntu-latest
+    needs: prefix-title
     steps:
       - name: Link PR to issue
         uses: actions/github-script@v7
