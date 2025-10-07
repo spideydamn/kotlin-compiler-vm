@@ -131,7 +131,7 @@ jobs:
     needs: link
     if: github.event.action == 'opened' || github.event.action == 'edited' || github.event.action == 'reopened' || github.event.action == 'synchronize'
     steps:
-      - name: Put linked issue into Project "NoCountry lang" → Status: Review
+      - name: 'Put linked issue into Project "NoCountry lang" → Status: Review'
         uses: actions/github-script@v7
         with:
           # Для org-level проектов v2 может понадобиться PAT с правами на projects
