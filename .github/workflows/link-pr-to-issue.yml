@@ -8,6 +8,7 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
+  projects: read
 
 jobs:
   prefix-title:
@@ -172,7 +173,9 @@ jobs:
             const STATUS_NAME = "Status";
             const STATUS_VALUE = "Review";
 
-            // Ищем проект v2 в репозитории по названию
+            // Ищем проект v2 в репозитории
+            console.log(`🔍 Searching for project "${PROJECT_TITLE}" in repository ${owner}/${repo}`);
+            
             const repoProjects = await github.graphql(`
               query($owner:String!, $repo:String!){
                 repository(owner:$owner, name:$repo){
@@ -181,16 +184,18 @@ jobs:
               }
             `, { owner, repo });
             
-            console.log(`🔍 Found ${repoProjects?.repository?.projectsV2?.nodes?.length || 0} projects in repository`);
-            const allProjects = repoProjects?.repository?.projectsV2?.nodes || [];
-            allProjects.forEach(p => console.log(`📋 Project: "${p.title}" (ID: ${p.id})`));
+            const repoProjectsList = repoProjects?.repository?.projectsV2?.nodes || [];
+            console.log(`📋 Found ${repoProjectsList.length} projects in repository`);
+            repoProjectsList.forEach(p => console.log(`  - "${p.title}" (ID: ${p.id})`));
             
-            let project = allProjects.find(p => p.title === PROJECT_TITLE);
+            const project = repoProjectsList.find(p => p.title === PROJECT_TITLE);
 
             if (!project) {
-              console.log(`❌ Project v2 "${PROJECT_TITLE}" not found. Available projects: ${allProjects.map(p => p.title).join(', ')}`);
+              console.log(`❌ Project v2 "${PROJECT_TITLE}" not found. Available projects: ${repoProjectsList.map(p => p.title).join(', ')}`);
               return;
             }
+            
+            console.log(`✅ Found project: "${project.title}" (ID: ${project.id})`);
 
             const statusField = (project.fields.nodes || []).find(f => f && (f.name || "").toLowerCase() === STATUS_NAME.toLowerCase());
             if (!statusField) {
