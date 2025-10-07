@@ -20,7 +20,7 @@ jobs:
           script: |
             // Берём актуальные данные PR (после префиксации заголовка предыдущим job)
             const payloadPr = context.payload.pull_request;
-            const { owner, repo } = context.repo;
+            const { owner: repoOwner, repo: repoName } = context.repo;
             const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: payloadPr.number });
 
             // Skip forks (token will not have write permissions)
@@ -40,8 +40,8 @@ jobs:
 
             const updatedTitle = `${prefix}${pr.title}`;
             await github.rest.pulls.update({
-              owner,
-              repo,
+              owner: repoOwner,
+              repo: repoName,
               pull_number: pr.number,
               title: updatedTitle
             });
