@@ -26,11 +26,9 @@
 - `int` - целые числа
 - `float` - числа с плавающей точкой
 - `bool` - булевы значения
-- `string` - строки
 - `void` - отсутствие возвращаемого значения
 - `int[]` - массив целых чисел
 - `float[]` - массив чисел с плавающей точкой
-- `string[]` - массив строк
 
 ### Операторы
 - Арифметические: `+`, `-`, `*`, `/`, `%`
@@ -59,7 +57,6 @@ let <identifier>: <type> = <expression>;
 let x: int = 42;
 let y: float = 3.14;
 let flag: bool = true;
-let name: string = "Hello";
 let numbers: int[] = [1, 2, 3, 4, 5];
 ```
 
@@ -91,9 +88,9 @@ if (<condition>) {
 **Пример:**
 ```kotlin
 if (x > 10) {
-    print("Больше 10");
+    result = 1;
 } else {
-    print("Меньше или равно 10");
+    result = 0;
 }
 ```
 
@@ -212,7 +209,7 @@ func merge(left: int[], right: int[]): int[] {
     let i: int = 0;
     let j: int = 0;
     
-    while (i < left.length && j < right.length) {
+    for (i < left.length && j < right.length) {
         if (left[i] <= right[j]) {
             result.append(left[i]);
             i = i + 1;
@@ -222,12 +219,12 @@ func merge(left: int[], right: int[]): int[] {
         }
     }
     
-    while (i < left.length) {
+    for (i < left.length) {
         result.append(left[i]);
         i = i + 1;
     }
     
-    while (j < right.length) {
+    for (j < right.length) {
         result.append(right[j]);
         j = j + 1;
     }
@@ -270,10 +267,11 @@ func findPrimes(limit: int): int[] {
 4. **Ключевые слова** - все конструкции должны начинаться с ключевых слов
 
 ### Ограничения
-1. **Нет вложенных циклов** - поддерживаются только простые циклы
+1. **Нет строк** - язык работает только с числами и булевыми значениями
 2. **Нет break/continue** - упрощение для парсера
-3. **Нет range циклов** - только for с тремя частями
+3. **Нет range циклов** - только for с тремя частями или условием
 4. **Нет автовывода типов** - все типы должны быть явными
+5. **Нет while** - используйте `for (condition)` вместо `while (condition)`
 
 ## Грамматика (BNF)
 
@@ -319,7 +317,6 @@ multiplicative_expression ::= unary_expression [("*" | "/" | "%") multiplicative
 unary_expression ::= ["!"] primary_expression
 
 primary_expression ::= number
-                    | string
                     | boolean
                     | identifier
                     | "(" expression ")"
@@ -330,7 +327,7 @@ function_call ::= identifier "(" [expression ("," expression)*] ")"
 
 array_access ::= identifier "[" expression "]"
 
-type ::= "int" | "float" | "bool" | "string" | "void" | type "[]"
+type ::= "int" | "float" | "bool" | "void" | type "[]"
 
 parameters ::= [parameter ("," parameter)*]
 
