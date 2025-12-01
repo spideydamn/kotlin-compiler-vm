@@ -1,4 +1,3 @@
-// Recursive factorial calculation
 func factorial(n: int): int {
     if (n <= 1) {
         return 1;
@@ -9,5 +8,4 @@ func factorial(n: int): int {
 
 func main(): void {
     let result: int = factorial(20);
-    // result = 2432902008176640000
 }

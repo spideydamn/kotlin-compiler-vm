@@ -15,7 +15,7 @@ func merge(left: int[], right: int[]): int[] {
     let i: int = 0;
     let j: int = 0;
     
-    for (i < left.length && j < right.length) {
+    for (; i < left.length && j < right.length;) {
         if (left[i] <= right[j]) {
             result.append(left[i]);
             i = i + 1;
@@ -25,12 +25,12 @@ func merge(left: int[], right: int[]): int[] {
         }
     }
     
-    for (i < left.length) {
+    for (; i < left.length;) {
         result.append(left[i]);
         i = i + 1;
     }
     
-    for (j < right.length) {
+    for (; j < right.length;) {
         result.append(right[j]);
         j = j + 1;
     }

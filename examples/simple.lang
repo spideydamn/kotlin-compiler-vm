@@ -1,4 +1,3 @@
-// Simple program for testing the lexer
 func main(): void {
     let x: int = 42;
     let y: int = 10;
@@ -6,4 +5,3 @@ func main(): void {
     let product: int = x * y;
     let flag: bool = x > y;
 }
-
