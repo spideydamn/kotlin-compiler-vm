@@ -1,0 +1,30 @@
+func sieve(limit: int): int[] {
+    let isPrime: bool[] = [];
+    for (let i: int = 0; i <= limit; i = i + 1) {
+        isPrime.append(true);
+    }
+
+    isPrime[0] = false;
+    isPrime[1] = false;
+
+    let i: int = 2;
+    for (; i * i <= limit;) {
+        if (isPrime[i]) {
+            let j: int = i * i;
+            for (; j <= limit;) {
+                isPrime[j] = false;
+                j = j + i;
+            }
+        }
+        i = i + 1;
+    }
+
+    let primes: int[] = [];
+    for (let k: int = 2; k <= limit; k = k + 1) {
+        if (isPrime[k]) {
+            primes.append(k);
+        }
+    }
+
+    return primes;
+}
