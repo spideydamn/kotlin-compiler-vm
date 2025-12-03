@@ -64,12 +64,6 @@
 - `true` - истина
 - `false` - ложь
 
-**Массивные литералы:**
-
-- `[1, 2, 3, 4, 5]` - массив целых чисел
-- `[1.0, 2.5, 3.14]` - массив чисел с плавающей точкой
-- `[]` - пустой массив
-
 ### Разделители
 
 - `;` - точка с запятой (обязательна)
@@ -94,7 +88,7 @@ let x: int = 42;
 let y: float = 3.14;
 let flag: bool = true;
 let bigNumber: int = 2432902008176640000;  // Факториал 20!
-let numbers: int[] = [1, 2, 3, 4, 5];
+let numbers: int[] = int[10];
 ```
 
 ### 2. Арифметические выражения
@@ -179,11 +173,15 @@ func main(): void {
 
 ### 6. Массивы
 
-#### Объявление массива
+#### Объявление и инициализация массива
+
+Массив инициализируется только через указание размера в квадратных скобках (как в C):
 
 ```
-let <identifier>: <type>[] = [<elements>];
+let <identifier>: <type>[] = <base_type>[<size>];
 ```
+
+где `<base_type>` - базовый тип элемента массива (`int`, `float`, `bool`), `<size>` - целочисленное выражение, определяющее размер массива.
 
 #### Доступ к элементам
 
@@ -191,18 +189,12 @@ let <identifier>: <type>[] = [<elements>];
 <array_identifier>[<index>]
 ```
 
-#### Длина массива
-
-```
-<array_identifier>.length
-```
-
 **Примеры:**
 
 ```kotlin
-let numbers: int[] = [1, 2, 3, 4, 5];
+let numbers: int[] = int[10];
 let first: int = numbers[0];
-let len: int = numbers.length;
+numbers[0] = 42;
 ```
 
 ## Особенности синтаксиса
@@ -229,12 +221,11 @@ identifier[expr] = expr;
 - `(arrExpr)[i] = ...`
 - цепочки вида `a = b = c`
 
-### Пустые списки аргументов и массивы
+### Пустые списки аргументов
 
 Синтаксис допускает:
 
 - пустой список аргументов: `f()`
-- пустой массив: `[]`
 
 ### Другие ограничения
 
@@ -243,7 +234,8 @@ identifier[expr] = expr;
 3. **Нет range циклов** - только for с тремя частями или условием
 4. **Нет автовывода типов** - все типы должны быть явными
 5. **Нет while** - используйте `for (condition)` вместо `while (condition)`
-6. **Нет классов и пользовательских методов** - обращения типа `obj.method(...)` или `obj.field` разрешены только для встроенных методов или полей
+6. **Нет классов и методов** - язык не поддерживает объектно-ориентированные конструкции
+7. **Нет доступа к свойствам массивов** - массивы не поддерживают обращения через `.` (например, `.length`, `.append`)
 
 ## Грамматика (EBNF)
 
@@ -283,7 +275,6 @@ unary_expression ::= { "!" | "-" | "+" } postfix_expression
 postfix_expression ::= primary_expression { 
                           "(" arg_list ")"
                         | "[" expression "]"
-                        | "." identifier [ "(" arg_list ")" ]
                       }
 
 lvalue ::= identifier [ "[" expression "]" ]
@@ -295,9 +286,9 @@ primary_expression ::= int_literal
                      | boolean_literal
                      | identifier
                      | "(" expression ")"
-                     | array_literal
+                     | array_initialization
 
-array_literal ::= "[" arg_list "]"
+array_initialization ::= base_type "[" expression "]"
 
 type ::= base_type { "[]" }
 base_type ::= "int" | "float" | "bool" | "void"
