@@ -1,38 +1,56 @@
-func mergeSort(arr: int[]): int[] {
-    if (arr.length <= 1) {
+func mergeSort(arr: int[], size: int): int[] {
+    if (size <= 1) {
         return arr;
     }
     
-    let mid: int = arr.length / 2;
-    let left: int[] = arr.slice(0, mid);
-    let right: int[] = arr.slice(mid, arr.length);
+    let mid: int = size / 2;
+    let leftSize: int = mid;
+    let rightSize: int = size - mid;
+    let left: int[] = int[leftSize];
+    let right: int[] = int[rightSize];
     
-    return merge(mergeSort(left), mergeSort(right));
+    for (let i: int = 0; i < leftSize; i = i + 1) {
+        left[i] = arr[i];
+    }
+    
+    for (let i: int = 0; i < rightSize; i = i + 1) {
+        right[i] = arr[mid + i];
+    }
+    
+    let sortedLeft: int[] = mergeSort(left, leftSize);
+    let sortedRight: int[] = mergeSort(right, rightSize);
+    return merge(sortedLeft, leftSize, sortedRight, rightSize);
 }
 
-func merge(left: int[], right: int[]): int[] {
-    let result: int[] = [];
+func merge(left: int[], leftSize: int, right: int[], rightSize: int): int[] {
+    let resultSize: int = leftSize + rightSize;
+    let result: int[] = int[resultSize];
     let i: int = 0;
     let j: int = 0;
+    let k: int = 0;
     
-    for (; i < left.length && j < right.length;) {
+    for (; i < leftSize && j < rightSize;) {
         if (left[i] <= right[j]) {
-            result.append(left[i]);
+            result[k] = left[i];
             i = i + 1;
+            k = k + 1;
         } else {
-            result.append(right[j]);
+            result[k] = right[j];
             j = j + 1;
+            k = k + 1;
         }
     }
     
-    for (; i < left.length;) {
-        result.append(left[i]);
+    for (; i < leftSize;) {
+        result[k] = left[i];
         i = i + 1;
+        k = k + 1;
     }
     
-    for (; j < right.length;) {
-        result.append(right[j]);
+    for (; j < rightSize;) {
+        result[k] = right[j];
         j = j + 1;
+        k = k + 1;
     }
     
     return result;

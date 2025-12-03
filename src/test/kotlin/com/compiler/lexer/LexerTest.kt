@@ -249,23 +249,110 @@ class LexerTest {
     }
     
     @Test
-    fun `test array literal`() {
-        val source = "[1, 2, 3, 4, 5]"
+    fun `test array initialization`() {
+        val source = "int[10]"
         val types = tokenTypes(source)
         
         assertEquals(
             listOf(
+                TokenType.TYPE_INT,
                 TokenType.LBRACKET,
                 TokenType.INT_LITERAL,
-                TokenType.COMMA,
-                TokenType.INT_LITERAL,
-                TokenType.COMMA,
-                TokenType.INT_LITERAL,
-                TokenType.COMMA,
-                TokenType.INT_LITERAL,
-                TokenType.COMMA,
+                TokenType.RBRACKET,
+                TokenType.EOF
+            ),
+            types
+        )
+    }
+    
+    @Test
+    fun `test array indexing`() {
+        val source = "arr[0]"
+        val types = tokenTypes(source)
+        
+        assertEquals(
+            listOf(
+                TokenType.IDENTIFIER,
+                TokenType.LBRACKET,
                 TokenType.INT_LITERAL,
                 TokenType.RBRACKET,
+                TokenType.EOF
+            ),
+            types
+        )
+    }
+    
+    @Test
+    fun `test array type declaration`() {
+        val source = "int[]"
+        val types = tokenTypes(source)
+        
+        assertEquals(
+            listOf(
+                TokenType.TYPE_INT,
+                TokenType.LBRACKET,
+                TokenType.RBRACKET,
+                TokenType.EOF
+            ),
+            types
+        )
+    }
+    
+    @Test
+    fun `test array initialization with variable size`() {
+        val source = "int[size]"
+        val types = tokenTypes(source)
+        
+        assertEquals(
+            listOf(
+                TokenType.TYPE_INT,
+                TokenType.LBRACKET,
+                TokenType.IDENTIFIER,
+                TokenType.RBRACKET,
+                TokenType.EOF
+            ),
+            types
+        )
+    }
+    
+    @Test
+    fun `test array initialization with expression`() {
+        val source = "int[10 + 5]"
+        val types = tokenTypes(source)
+        
+        assertEquals(
+            listOf(
+                TokenType.TYPE_INT,
+                TokenType.LBRACKET,
+                TokenType.INT_LITERAL,
+                TokenType.PLUS,
+                TokenType.INT_LITERAL,
+                TokenType.RBRACKET,
+                TokenType.EOF
+            ),
+            types
+        )
+    }
+    
+    @Test
+    fun `test full array declaration with initialization`() {
+        val source = "let arr: int[] = int[10];"
+        val types = tokenTypes(source)
+        
+        assertEquals(
+            listOf(
+                TokenType.LET,
+                TokenType.IDENTIFIER,
+                TokenType.COLON,
+                TokenType.TYPE_INT,
+                TokenType.LBRACKET,
+                TokenType.RBRACKET,
+                TokenType.ASSIGN,
+                TokenType.TYPE_INT,
+                TokenType.LBRACKET,
+                TokenType.INT_LITERAL,
+                TokenType.RBRACKET,
+                TokenType.SEMICOLON,
                 TokenType.EOF
             ),
             types
