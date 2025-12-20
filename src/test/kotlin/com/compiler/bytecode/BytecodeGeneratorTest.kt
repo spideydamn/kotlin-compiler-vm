@@ -1258,12 +1258,16 @@ class BytecodeGeneratorTest {
         assertTrue(mainInstructions.contains(Opcodes.CALL), "Should contain CALL to mergeSort")
         assertTrue(mainInstructions.contains(Opcodes.STORE_LOCAL), "Should store result")
         assertTrue(mainInstructions.contains(Opcodes.PRINT_ARRAY), "Should contain PRINT_ARRAY for output")
+        assertTrue(mainInstructions.contains(Opcodes.JUMP), "Should contain JUMP for loop")
+        assertTrue(mainInstructions.contains(Opcodes.JUMP_IF_FALSE), "Should contain JUMP_IF_FALSE for loop condition")
+        assertTrue(mainInstructions.contains(Opcodes.SUB_INT), "Should contain SUB_INT for 99999 - i")
         
         // Check constants
         assertTrue(module.intConstants.contains(0L), "Should have constant 0")
         assertTrue(module.intConstants.contains(1L), "Should have constant 1")
         assertTrue(module.intConstants.contains(2L), "Should have constant 2")
-        assertTrue(module.intConstants.contains(8L), "Should have constant 8")
+        assertTrue(module.intConstants.contains(10000L), "Should have constant 10000")
+        assertTrue(module.intConstants.contains(99999L), "Should have constant 99999")
     }
 }
 
