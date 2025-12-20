@@ -11,6 +11,12 @@ sealed class Type {
     object Void : Type()
     data class Array(val elementType: Type) : Type()
     object Unknown : Type()
+    
+    // Специальные типы для встроенных функций (не используются в пользовательском коде)
+    /** Любой примитивный тип (int, float, bool) */
+    object Primitive : Type()
+    /** Любой массив (int[], float[], bool[]) */
+    object AnyArray : Type()
 
     override fun toString(): String = when (this) {
         Int -> "int"
@@ -19,6 +25,8 @@ sealed class Type {
         Void -> "void"
         is Array -> "${elementType}[]"
         Unknown -> "unknown"
+        Primitive -> "primitive"
+        AnyArray -> "array"
     }
 }
 
@@ -70,6 +78,24 @@ class Scope(val parent: Scope?) {
 
     fun resolveFunction(name: String): FunctionSymbol? =
         functions[name] ?: parent?.resolveFunction(name)
+
+    private fun isAssignable(from: Type, to: Type): Boolean {
+        if (to == Type.Unknown || from == Type.Unknown) return true
+        if (from == to) return true
+        
+        // Специальная логика для встроенных функций
+        // Primitive принимает любой примитивный тип (int, float, bool)
+        if (to == Type.Primitive) {
+            return from == Type.Int || from == Type.Float || from == Type.Bool
+        }
+        
+        // AnyArray принимает любой массив
+        if (to == Type.AnyArray) {
+            return from is Type.Array
+        }
+        
+        return false
+    }
 
     fun getAllVariables(): Map<String, VariableSymbol> = variables.toMap()
     fun getAllFunctions(): Map<String, FunctionSymbol> = functions.toMap()

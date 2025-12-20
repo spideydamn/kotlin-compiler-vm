@@ -191,7 +191,7 @@ object Printer {
 
         if (functions.isNotEmpty()) {
             println("${indent}Functions:")
-            functions.values.forEach { fn ->
+            functions.forEach { (name, fn) ->
                 val params = fn.parameters.joinToString(", ") { "${it.name}: ${it.type}" }
                 println("${indent}  ${fn.name}($params): ${fn.returnType}")
             }

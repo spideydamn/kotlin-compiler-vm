@@ -16,6 +16,9 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
     override fun analyze(program: Program): AnalysisResult {
         globalScope = Scope(parent = null)
 
+        // Инициализация встроенных функций
+        initializeBuiltins(globalScope)
+
         for (stmt in program.statements) {
             analyzeStatement(stmt, globalScope)
         }
@@ -25,6 +28,29 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
             globalScope = globalScope,
             error = null
         )
+    }
+
+    /**
+     * Инициализирует встроенные функции языка в глобальной области видимости.
+     * 
+     * Встроенные функции:
+     * - print(value: primitive): void - печать примитивного типа (int, float, bool)
+     * - printArray(value: array): void - печать массива (int[], float[], bool[])
+     */
+    private fun initializeBuiltins(scope: Scope) {
+        // print для примитивных типов (int, float, bool)
+        scope.defineFunction(FunctionSymbol(
+            name = "print",
+            parameters = listOf(VariableSymbol("value", Type.Primitive)),
+            returnType = Type.Void
+        ))
+
+        // printArray для массивов (int[], float[], bool[])
+        scope.defineFunction(FunctionSymbol(
+            name = "printArray",
+            parameters = listOf(VariableSymbol("value", Type.AnyArray)),
+            returnType = Type.Void
+        ))
     }
 
     private fun analyzeStatement(stmt: Statement, scope: Scope) {
@@ -369,8 +395,8 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
 
         if (expr.args.size != fn.parameters.size) {
             report(
-                    "Function '${fn.name}' expects ${fn.parameters.size} arguments but got ${expr.args.size}",
-                    expr.pos
+                "Function '${fn.name}' expects ${fn.parameters.size} arguments but got ${expr.args.size}",
+                expr.pos
             )
         }
 
@@ -384,8 +410,8 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
             val paramType = paramTypes[i]
             if (!isAssignable(argType, paramType)) {
                 report(
-                        "Type mismatch for argument ${i + 1} of function '${fn.name}': expected '$paramType', got '$argType'",
-                        expr.pos
+                    "Type mismatch for argument ${i + 1} of function '${fn.name}': expected '$paramType', got '$argType'",
+                    expr.pos
                 )
             }
         }
@@ -449,7 +475,20 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
 
     private fun isAssignable(from: Type, to: Type): Boolean {
         if (to == Type.Unknown || from == Type.Unknown) return true
-        return from == to
+        if (from == to) return true
+        
+        // Специальная логика для встроенных функций
+        // Primitive принимает любой примитивный тип (int, float, bool)
+        if (to == Type.Primitive) {
+            return from == Type.Int || from == Type.Float || from == Type.Bool
+        }
+        
+        // AnyArray принимает любой массив
+        if (to == Type.AnyArray) {
+            return from is Type.Array
+        }
+        
+        return false
     }
 
     private fun report(message: String, position: Any?) {

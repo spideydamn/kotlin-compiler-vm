@@ -125,4 +125,91 @@ class SemanticAnalyzerTest {
             "Expected error about returning value from void function, got: ${exception.message}"
         )
     }
+
+    // ========== Tests for built-in print function ==========
+
+    @Test
+    fun `print with primitive types is valid`() {
+        val source = """
+            func main(): void {
+                print(42);
+                print(3.14);
+                print(true);
+            }
+        """.trimIndent()
+
+        val result = analyze(source)
+        assertNull(result.error, "Expected no semantic errors for print with primitive types")
+    }
+
+    @Test
+    fun `printArray with array types is valid`() {
+        val source = """
+            func main(): void {
+                let intArr: int[] = int[5];
+                let floatArr: float[] = float[3];
+                let boolArr: bool[] = bool[2];
+                printArray(intArr);
+                printArray(floatArr);
+                printArray(boolArr);
+            }
+        """.trimIndent()
+
+        val result = analyze(source)
+        assertNull(result.error, "Expected no semantic errors for printArray with array types")
+    }
+
+    @Test
+    fun `print without arguments produces error`() {
+        val source = """
+            func main(): void {
+                print();
+            }
+        """.trimIndent()
+
+        val exception = assertThrows<SemanticException> {
+            analyze(source)
+        }
+        assertTrue(
+            exception.message?.contains("expects 1 arguments but got 0") == true,
+            "Expected error about missing arguments, got: ${exception.message}"
+        )
+    }
+
+    @Test
+    fun `print with too many arguments produces error`() {
+        val source = """
+            func main(): void {
+                print(42, 3.14);
+            }
+        """.trimIndent()
+
+        val exception = assertThrows<SemanticException> {
+            analyze(source)
+        }
+        assertTrue(
+            exception.message?.contains("expects 1 arguments but got 2") == true,
+            "Expected error about too many arguments, got: ${exception.message}"
+        )
+    }
+
+    @Test
+    fun `print and printArray are available in global scope`() {
+        val source = """
+            func main(): void {
+                print(42);
+                let arr: int[] = int[5];
+                printArray(arr);
+            }
+        """.trimIndent()
+
+        val result = analyze(source)
+        assertNull(result.error, "Expected print and printArray to be available in global scope")
+        
+        val printFunction = result.globalScope.resolveFunction("print")
+        assertNotNull(printFunction, "Expected print function to be in global scope")
+        
+        val printArrayFunction = result.globalScope.resolveFunction("printArray")
+        assertNotNull(printArrayFunction, "Expected printArray function to be in global scope")
+    }
 }
