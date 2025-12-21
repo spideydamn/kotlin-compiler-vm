@@ -1,6 +1,5 @@
 package com.compiler.parser.ast
 
-import com.compiler.parser.ast.Expression
 import com.compiler.domain.SourcePos
 
 /** Базовый класс для всех узлов-операторов (statements). */

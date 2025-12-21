@@ -11,7 +11,7 @@ import java.io.File
 
 object BytecodeService {
 
-    fun compile(filePath: String): com.compiler.bytecode.BytecodeModule? {
+    fun run(filePath: String): com.compiler.bytecode.BytecodeModule? {
         val file = File(filePath)
 
         if (!file.exists()) {

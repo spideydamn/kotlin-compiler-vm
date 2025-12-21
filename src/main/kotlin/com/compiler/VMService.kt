@@ -16,7 +16,7 @@ object VMService {
         }
 
         // Compile to bytecode
-        val module = BytecodeService.compile(filePath)
+        val module = BytecodeService.run(filePath)
         if (module == null) {
             // BytecodeService already printed error message
             return
