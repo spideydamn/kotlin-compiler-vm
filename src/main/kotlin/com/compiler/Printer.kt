@@ -23,6 +23,27 @@ object Printer {
         printProgram(program)
     }
 
+    fun printOptimized(program: Program) {
+        println("=== Optimized AST ===")
+        println("Optimization completed successfully.")
+        println()
+        println("=== AST ===")
+        printProgram(program)
+    }
+
+    fun printSemanticAnalysis(result: AnalysisResult) {
+        println("=== Semantic Analysis ===")
+        if (result.error == null) {
+            println("Semantic analysis completed successfully.")
+            println()
+            println("=== Symbol Table ===")
+            printSymbolTable(result.globalScope, "")
+        } else {
+            println("Semantic analysis found errors:")
+            println("  ${result.error.message}")
+        }
+    }
+
     private fun printProgram(program: Program) {
         println("Program")
         val lastIndex = program.statements.lastIndex
@@ -167,19 +188,6 @@ object Printer {
         }
     }
 
-    fun printSemanticAnalysis(result: AnalysisResult) {
-        println("=== Semantic Analysis ===")
-        if (result.error == null) {
-            println("Semantic analysis completed successfully.")
-            println()
-            println("=== Symbol Table ===")
-            printSymbolTable(result.globalScope, "")
-        } else {
-            println("Semantic analysis found errors:")
-            println("  ${result.error.message}")
-        }
-    }
-
     private fun printSymbolTable(scope: com.compiler.semantic.Scope, indent: String) {
         val variables = scope.getAllVariables()
         val functions = scope.getAllFunctions()
@@ -191,7 +199,7 @@ object Printer {
 
         if (functions.isNotEmpty()) {
             println("${indent}Functions:")
-            functions.forEach { (name, fn) ->
+            functions.forEach { (_, fn) ->
                 val params = fn.parameters.joinToString(", ") { "${it.name}: ${it.type}" }
                 println("${indent}  ${fn.name}($params): ${fn.returnType}")
             }
