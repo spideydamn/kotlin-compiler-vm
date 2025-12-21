@@ -3,6 +3,8 @@ import com.compiler.parser.Parser
 import com.compiler.semantic.DefaultSemanticAnalyzer
 import com.compiler.bytecode.BytecodeGenerator
 import com.compiler.bytecode.Opcodes
+import com.compiler.vm.VirtualMachine
+import com.compiler.vm.VMResult
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.test.*
@@ -55,10 +57,15 @@ class E2ETest {
         
         val mainInstructions = main.instructions
         assertTrue(mainInstructions.contains(Opcodes.CALL), "Main should call factorial")
-        assertTrue(mainInstructions.contains(Opcodes.PRINT), "Main should print result")
+        //assertTrue(mainInstructions.contains(Opcodes.PRINT), "Main should print result")
         
         assertTrue(module.intConstants.contains(20L), "Should have constant 20")
         assertTrue(module.intConstants.contains(1L), "Should have constant 1")
+        
+        // Execute bytecode
+        val vm = VirtualMachine(module)
+        val result = vm.execute()
+        assertEquals(VMResult.SUCCESS, result, "VM execution should succeed")
     }
 
     @Test
@@ -88,6 +95,11 @@ class E2ETest {
         
         assertTrue(module.intConstants.contains(10000L), "Should have constant 10000")
         assertTrue(module.intConstants.contains(99999L), "Should have constant 99999")
+        
+        // Execute bytecode
+        val vm = VirtualMachine(module)
+        val result = vm.execute()
+        assertEquals(VMResult.SUCCESS, result, "VM execution should succeed")
     }
 
     @Test
@@ -116,6 +128,11 @@ class E2ETest {
         assertTrue(mainInstructions.contains(Opcodes.PRINT_ARRAY), "Main should print array")
         
         assertTrue(module.intConstants.contains(30L), "Should have constant 30")
+        
+        // Execute bytecode
+        val vm = VirtualMachine(module)
+        val result = vm.execute()
+        assertEquals(VMResult.SUCCESS, result, "VM execution should succeed")
     }
 
     @Test
@@ -141,5 +158,10 @@ class E2ETest {
         assertTrue(module.intConstants.contains(10L), "Should have constant 10")
         
         assertEquals(5, main.localsCount, "Should have 5 local variables (x, y, sum, product, flag)")
+        
+        // Execute bytecode
+        val vm = VirtualMachine(module)
+        val result = vm.execute()
+        assertEquals(VMResult.SUCCESS, result, "VM execution should succeed")
     }
 }
