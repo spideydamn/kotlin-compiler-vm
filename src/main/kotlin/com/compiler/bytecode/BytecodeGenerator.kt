@@ -185,9 +185,23 @@ class BytecodeGenerator(
             
             is IfStmt -> {
                 generateExpression(stmt.condition)
-                val jumpFalseAddr = ctx.builder.currentAddress()
-                ctx.builder.emit(Opcodes.JUMP_IF_FALSE, 0) // patch later
                 
+                // Create labels for jump targets
+                val elseLabel = if (stmt.elseBranch != null) {
+                    ctx.builder.createLabel("else_${ctx.builder.currentAddress()}")
+                } else {
+                    null
+                }
+                val afterIfLabel = ctx.builder.createLabel("after_if_${ctx.builder.currentAddress()}")
+                
+                // Emit conditional jump - will resolve label when it's defined
+                if (elseLabel != null) {
+                    ctx.builder.emitJump(Opcodes.JUMP_IF_FALSE, elseLabel)
+                } else {
+                    ctx.builder.emitJump(Opcodes.JUMP_IF_FALSE, afterIfLabel)
+                }
+                
+                // Generate then branch
                 generateBlock(stmt.thenBranch, localVars, localIndex)
                 
                 // Check if then branch ends with return - if so, no need for JUMP
@@ -195,34 +209,24 @@ class BytecodeGenerator(
                     it == Opcodes.RETURN || it == Opcodes.RETURN_VOID 
                 } ?: false
                 
-                val jumpAddr = if (stmt.elseBranch != null && !thenEndsWithReturn) {
-                    val addr = ctx.builder.currentAddress()
-                    ctx.builder.emit(Opcodes.JUMP, 0) // patch later
-                    addr
-                } else {
-                    null
+                // Emit unconditional jump to skip else branch (if needed)
+                if (stmt.elseBranch != null && !thenEndsWithReturn) {
+                    ctx.builder.emitJump(Opcodes.JUMP, afterIfLabel)
                 }
                 
-                if (stmt.elseBranch != null) {
-                    // Calculate address for JUMP_IF_FALSE patch - should jump to start of else branch
-                    val elseBranchStartAddr = ctx.builder.currentAddress()
-                    ctx.builder.patchOperand(jumpFalseAddr, elseBranchStartAddr - jumpFalseAddr)
-                    
+                // Define else branch label and generate else branch
+                if (stmt.elseBranch != null && elseLabel != null) {
+                    ctx.builder.defineLabel(elseLabel.name)
                     generateBlock(stmt.elseBranch, localVars, localIndex)
-                    
-                    if (jumpAddr != null) {
-                        val afterElseAddr = ctx.builder.currentAddress()
-                        ctx.builder.patchOperand(jumpAddr, afterElseAddr - jumpAddr)
-                    }
-                } else {
-                    // No else branch - JUMP_IF_FALSE should jump to after then branch
-                    val afterThenAddr = ctx.builder.currentAddress()
-                    ctx.builder.patchOperand(jumpFalseAddr, afterThenAddr - jumpFalseAddr)
                 }
+                
+                // Define label after if statement
+                ctx.builder.defineLabel(afterIfLabel.name)
             }
             
             is ForStmt -> {
-                val loopStartAddr: Int
+                // Create labels for loop control
+                val loopStartLabel = ctx.builder.createLabel("loop_start_${ctx.builder.currentAddress()}")
                 
                 // Initializer
                 when (val init = stmt.initializer) {
@@ -245,13 +249,14 @@ class BytecodeGenerator(
                     }
                 }
                 
-                loopStartAddr = ctx.builder.currentAddress()
+                // Define loop start label
+                ctx.builder.defineLabel(loopStartLabel.name)
                 
                 // Condition
                 if (stmt.condition != null) {
+                    val afterLoopLabel = ctx.builder.createLabel("after_loop_${ctx.builder.currentAddress()}")
                     generateExpression(stmt.condition)
-                    val jumpFalseAddr = ctx.builder.currentAddress()
-                    ctx.builder.emit(Opcodes.JUMP_IF_FALSE, 0) // patch later
+                    ctx.builder.emitJump(Opcodes.JUMP_IF_FALSE, afterLoopLabel)
                     
                     // Loop body
                     localIndex = generateBlock(stmt.body, localVars, localIndex)
@@ -266,14 +271,12 @@ class BytecodeGenerator(
                     }
                     
                     // Jump back to loop start
-                    val jumpBackAddr = ctx.builder.currentAddress()
-                    ctx.builder.emit(Opcodes.JUMP, loopStartAddr - jumpBackAddr)
+                    ctx.builder.emitJump(Opcodes.JUMP, loopStartLabel)
                     
-                    // Patch loop exit
-                    val afterLoopAddr = ctx.builder.currentAddress()
-                    ctx.builder.patchOperand(jumpFalseAddr, afterLoopAddr - jumpFalseAddr)
+                    // Define label after loop
+                    ctx.builder.defineLabel(afterLoopLabel.name)
                 } else {
-                    // Infinite loop
+                    // Infinite loop - no condition, no exit label needed
                     localIndex = generateBlock(stmt.body, localVars, localIndex)
                     
                     if (stmt.increment != null) {
@@ -284,8 +287,9 @@ class BytecodeGenerator(
                         }
                     }
                     
-                    val jumpBackAddr = ctx.builder.currentAddress()
-                    ctx.builder.emit(Opcodes.JUMP, loopStartAddr - jumpBackAddr)
+                    // Jump back to loop start
+                    ctx.builder.emitJump(Opcodes.JUMP, loopStartLabel)
+                    // Note: No afterLoopLabel for infinite loops - they never exit
                 }
             }
             

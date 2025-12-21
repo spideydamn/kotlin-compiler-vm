@@ -851,17 +851,23 @@ class VirtualMachineTest {
     fun `factorial calculation`() {
         // Function factorial(n): if n <= 1 then 1 else n * factorial(n-1)
         val factBuilder = InstructionBuilder()
+        
+        // Create labels for if-else
+        val recursiveCaseLabel = factBuilder.createLabel("recursive_case")
+        val afterIfLabel = factBuilder.createLabel("after_if")
+        
         // Load parameter n
         factBuilder.emit(Opcodes.LOAD_LOCAL, 0)       // instruction 0
         factBuilder.emit(Opcodes.PUSH_INT, 0)         // instruction 1 (constant 1)
         factBuilder.emit(Opcodes.LE_INT)              // instruction 2 (n <= 1)
-        factBuilder.emit(Opcodes.JUMP_IF_FALSE, 2)    // instruction 3 (jump to instruction 6 if false)
+        factBuilder.emitJump(Opcodes.JUMP_IF_FALSE, recursiveCaseLabel) // instruction 3
         
         // Base case: return 1
         factBuilder.emit(Opcodes.PUSH_INT, 0)         // instruction 4
         factBuilder.emit(Opcodes.RETURN)              // instruction 5
         
         // Recursive case: n * factorial(n-1)
+        factBuilder.defineLabel(recursiveCaseLabel.name) // instruction 6
         factBuilder.emit(Opcodes.LOAD_LOCAL, 0)       // instruction 6 (n for multiplication)
         factBuilder.emit(Opcodes.LOAD_LOCAL, 0)       // instruction 7 (n for subtraction)
         factBuilder.emit(Opcodes.PUSH_INT, 0)         // instruction 8 (constant 1)
@@ -869,6 +875,8 @@ class VirtualMachineTest {
         factBuilder.emit(Opcodes.CALL, 1)             // instruction 10 (factorial(n-1))
         factBuilder.emit(Opcodes.MUL_INT)             // instruction 11 (n * factorial(n-1))
         factBuilder.emit(Opcodes.RETURN)              // instruction 12
+        
+        factBuilder.defineLabel(afterIfLabel.name) // This label is never reached, but defined for consistency
 
         val factFunction = createFunction(
             name = "factorial",
@@ -901,17 +909,21 @@ class VirtualMachineTest {
     fun `simple loop`() {
         // main: for i in 0..2: print i
         val builder = InstructionBuilder()
+        
+        // Create labels for loop
+        val loopStartLabel = builder.createLabel("loop_start")
+        val exitLabel = builder.createLabel("exit")
+        
         // i = 0
         builder.emit(Opcodes.PUSH_INT, 0) // instruction 0
         builder.emit(Opcodes.STORE_LOCAL, 0) // instruction 1
         
         // loop: if i > 2 then exit
-        val loopStart = builder.currentAddress() // address of instruction 2
+        builder.defineLabel(loopStartLabel.name) // instruction 2
         builder.emit(Opcodes.LOAD_LOCAL, 0) // instruction 2: load i
         builder.emit(Opcodes.PUSH_INT, 1) // instruction 3: constant 2
         builder.emit(Opcodes.GT_INT) // instruction 4: i > 2
-        val jumpToExitAddr = builder.currentAddress() // address of instruction 5
-        builder.emit(Opcodes.JUMP_IF_TRUE, 0) // instruction 5: skip, will be fixed
+        builder.emitJump(Opcodes.JUMP_IF_TRUE, exitLabel) // instruction 5
         
         // print i
         builder.emit(Opcodes.LOAD_LOCAL, 0) // instruction 6
@@ -924,17 +936,11 @@ class VirtualMachineTest {
         builder.emit(Opcodes.STORE_LOCAL, 0) // instruction 11
         
         // jump to loop start
-        val jumpBackAddr = builder.currentAddress() // address of instruction 12
-        val jumpBackOffset = loopStart - jumpBackAddr - 1 // negative offset backward
-        builder.emit(Opcodes.JUMP, jumpBackOffset) // instruction 12
+        builder.emitJump(Opcodes.JUMP, loopStartLabel) // instruction 12
         
         // exit
-        val exitAddr = builder.currentAddress() // address of instruction 13
+        builder.defineLabel(exitLabel.name) // instruction 13
         builder.emit(Opcodes.RETURN_VOID) // instruction 13
-        
-        // Fix offset for JUMP_IF_TRUE
-        val jumpToExitOffset = exitAddr - jumpToExitAddr - 1
-        builder.patchOperand(jumpToExitAddr, jumpToExitOffset)
 
         val module = createModule(
             intConstants = listOf(0L, 2L, 1L),
