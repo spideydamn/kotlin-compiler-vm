@@ -1,7 +1,5 @@
 package com.compiler.parser.ast
 
-import com.compiler.parser.ast.Statement
-
 /**
  * Базовый класс для всех узлов AST. Используется как общий суперкласс для выражений, операторов и
  * типов.

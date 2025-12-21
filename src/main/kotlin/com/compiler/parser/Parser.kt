@@ -190,9 +190,10 @@ class Parser(private val tokens: List<Token>) {
         consume(TokenType.LPAREN, "Expected '(' after 'if'")
         val condition = expression()
         consume(TokenType.RPAREN, "Expected ')' after if condition")
-        val thenBranch =
-                statement() as? BlockStmt
-                        ?: BlockStmt(listOf(thenBranchOrSingleStatement(thenBranch = statement())))
+        
+        val thenStmt = statement()
+        val thenBranch = toBlockStmt(thenStmt)
+        
         var elseBranch: BlockStmt? = null
         if (match(TokenType.ELSE)) {
             val elseStmt = statement()
