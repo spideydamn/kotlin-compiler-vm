@@ -94,7 +94,6 @@ class MemoryManager(
             is IntArrayObject -> "int"
             is FloatArrayObject -> "float"
             is BoolArrayObject -> "bool"
-            else -> null
         }
     }
 
@@ -107,7 +106,6 @@ class MemoryManager(
             is IntArrayObject -> obj.elements.size
             is FloatArrayObject -> obj.elements.size
             is BoolArrayObject -> obj.elements.size
-            else -> throw IllegalStateException("heapId=${ref.heapId} is not an array")
         }
     }
 
