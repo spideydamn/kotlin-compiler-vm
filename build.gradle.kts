@@ -13,6 +13,8 @@ repositories {
 dependencies {
     // Kotlin standard library
     implementation(kotlin("stdlib"))
+    implementation("org.ow2.asm:asm:9.7")
+    implementation("org.ow2.asm:asm-commons:9.7")
     
     // Testing
     testImplementation(kotlin("test"))
