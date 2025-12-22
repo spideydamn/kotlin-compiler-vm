@@ -3,6 +3,7 @@ package com.compiler
 import com.compiler.bytecode.BytecodeModule
 import com.compiler.vm.VirtualMachine
 import com.compiler.vm.VMResult
+import com.compiler.vm.jit.JITCompiler
 import java.io.File
 
 object VMService {
@@ -24,7 +25,8 @@ object VMService {
 
         // Execute on virtual machine
         try {
-            val vm = VirtualMachine(module)
+            val jit = JITCompiler(module)
+            val vm = VirtualMachine(module, jit)
             val result = vm.execute()
 
             if (result != VMResult.SUCCESS) {

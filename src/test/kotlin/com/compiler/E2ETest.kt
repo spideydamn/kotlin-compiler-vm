@@ -6,6 +6,7 @@ import com.compiler.semantic.DefaultSemanticAnalyzer
 import com.compiler.bytecode.BytecodeGenerator
 import com.compiler.vm.VirtualMachine
 import com.compiler.vm.VMResult
+import com.compiler.vm.jit.JITCompiler
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.test.*
@@ -44,7 +45,8 @@ class E2ETest {
         val module = compileFile("src/test/resources/factorial.lang")
         
         // Execute bytecode
-        val vm = VirtualMachine(module)
+        val jit = JITCompiler(module)
+        val vm = VirtualMachine(module, jit)
         val result = vm.execute()
         assertEquals(VMResult.SUCCESS, result, "VM execution should succeed")
     }
@@ -54,7 +56,8 @@ class E2ETest {
         val module = compileFile("src/test/resources/merge_sort.lang")
         
         // Execute bytecode
-        val vm = VirtualMachine(module)
+        val jit = JITCompiler(module)
+        val vm = VirtualMachine(module, jit)
         val result = vm.execute()
         assertEquals(VMResult.SUCCESS, result, "VM execution should succeed")
     }
@@ -64,7 +67,8 @@ class E2ETest {
         val module = compileFile("src/test/resources/prime.lang")
         
         // Execute bytecode
-        val vm = VirtualMachine(module)
+        val jit = JITCompiler(module)
+        val vm = VirtualMachine(module, jit)
         val result = vm.execute()
         assertEquals(VMResult.SUCCESS, result, "VM execution should succeed")
     }
@@ -74,7 +78,8 @@ class E2ETest {
         val module = compileFile("src/test/resources/simple.lang")
         
         // Execute bytecode
-        val vm = VirtualMachine(module)
+        val jit = JITCompiler(module)
+        val vm = VirtualMachine(module, jit)
         val result = vm.execute()
         assertEquals(VMResult.SUCCESS, result, "VM execution should succeed")
     }

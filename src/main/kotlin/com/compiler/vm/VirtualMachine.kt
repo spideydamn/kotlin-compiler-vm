@@ -62,10 +62,37 @@ class VirtualMachine(
             // Check JIT compilation
             if (jitCompiler?.isEnabled() == true) {
                 val compiled = jitCompiler.getCompiled(frame.function.name)
-                if (compiled != null) {
-                    // Execute compiled version
-                    // For simplicity, JIT function call can be implemented here
-                    // For now, continue with interpretation
+                if (compiled != null && frame.pc == 0) {
+                    try {
+                        val result = compiled.execute(frame, operandStack, memoryManager)
+                        if (result != VMResult.SUCCESS) {
+                            while (callStack.isNotEmpty()) {
+                                callStack.removeLast().locals.clearAndReleaseAll()
+                            }
+                            operandStack.clearAndReleaseAll()
+                            return result
+                        }
+
+                        val returnAddress = frame.returnAddress
+                        frame.locals.clearAndReleaseAll()
+                        if (callStack.isNotEmpty() && callStack.last() === frame) {
+                            callStack.removeLast()
+                        }
+
+                        if (callStack.isNotEmpty() && returnAddress != null) {
+                            val callerFrame = callStack.last()
+                            callerFrame.pc = returnAddress
+                        }
+
+                        continue
+                    } catch (t: Throwable) {
+                        t.printStackTrace(System.err)
+                        while (callStack.isNotEmpty()) {
+                            callStack.removeLast().locals.clearAndReleaseAll()
+                        }
+                        operandStack.clearAndReleaseAll()
+                        return VMResult.INVALID_OPCODE
+                    }
                 }
             }
 
