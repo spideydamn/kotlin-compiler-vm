@@ -55,6 +55,7 @@ class JITCompiler(
                         val compiled = bytecodeGenerator.compileFunction(fn)
                         if (compiled != null) {
                             compiledFunctions[functionName] = compiled
+                            com.compiler.vm.jit.JITRuntime.registerCompiled(functionName, compiled)
                         } else {
                             System.err.println(
                                     "JIT: compilation returned null for function '$functionName'."
