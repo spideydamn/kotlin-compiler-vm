@@ -1,97 +1,156 @@
 package com.compiler.vm.jit
 
 import com.compiler.bytecode.BytecodeModule
-import com.compiler.bytecode.CompiledFunction
 import com.compiler.vm.CompiledFunctionExecutor
 import com.compiler.vm.JITCompilerInterface
-import java.util.concurrent.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.*
 
 /**
- * JITCompiler — per-spec implementation.
+ * Асинхронный JIT-компилятор для байткода модуля.
  *
- * - profile calls via recordCall(functionName)
- * - when counter >= threshold -> schedule asynchronous compilation (if not already compiled /
- * compiling)
- * - getCompiled returns compiled function or null
+ * Профилирует вызовы функций через recordCall и при достижении порога запускает фоновую компиляцию
+ * "горячих" функций. Компиляции выполняются в фиксированном пуле потоков и управляются через
+ * CoroutineScope; результат публикуется в thread-safe коллекцию.
+ *
+ * @param module байткодный модуль, содержащий функции для компиляции
+ * @param threshold число вызовов функции, после которого её следует компилировать
+ * @param maxParallelCompilations максимум параллельных компиляций (по умолчанию —
+ * min(availableProcessors, 4))
  */
 class JITCompiler(
         private val module: BytecodeModule,
         private val threshold: Int = 1000,
-        private val executor: ExecutorService = Executors.newCachedThreadPool()
-) : JITCompilerInterface {
+        maxParallelCompilations: Int = Runtime.getRuntime().availableProcessors().coerceAtMost(4)
+) : JITCompilerInterface, AutoCloseable {
 
-    private val callCounts: ConcurrentHashMap<String, AtomicInteger> = ConcurrentHashMap()
-    private val compiledFunctions: ConcurrentHashMap<String, CompiledFunctionExecutor> = ConcurrentHashMap()
-    private val compileLocks: ConcurrentHashMap<String, Any> = ConcurrentHashMap()
-
+    private val callCounts = ConcurrentHashMap<String, AtomicInteger>()
+    private val compiledFunctions = ConcurrentHashMap<String, CompiledFunctionExecutor>()
+    private val inProgress =
+            ConcurrentHashMap<String, CompletableDeferred<CompiledFunctionExecutor?>>()
     private val bytecodeGenerator = JVMBytecodeGenerator(module)
+
+    private val functionMap: Map<String, com.compiler.bytecode.CompiledFunction> =
+            module.functions.associateBy { it.name }
+
+    private val executorService =
+            Executors.newFixedThreadPool(maxParallelCompilations) // cpu-bound pool
+    private val dispatcher = executorService.asCoroutineDispatcher()
+    private val semaphore = Semaphore(maxParallelCompilations)
+
+    private val scope = CoroutineScope(SupervisorJob() + dispatcher + CoroutineName("jit-scope"))
 
     @Volatile private var enabled: Boolean = true
 
+    /**
+     * Отмечает вызов функции для профилирования и при достижении порога планирует её асинхронную
+     * компиляцию.
+     *
+     * Идемпотентен: повторные записи для одной функции, пока она в процессе компиляции,
+     * игнорируются. Компиляция выполняется вне блокировок; публикация результата — атомарно.
+     *
+     * @param functionName имя функции в модуле
+     */
     override fun recordCall(functionName: String) {
-        if (!isEnabled()) return
+        if (!enabled) return
 
         val counter = callCounts.computeIfAbsent(functionName) { AtomicInteger(0) }
         val newCount = counter.incrementAndGet()
 
-        if (newCount >= threshold && !compiledFunctions.containsKey(functionName)) {
-            val lock = compileLocks.computeIfAbsent(functionName) { Any() }
+        if (newCount < threshold) return
+        if (compiledFunctions.containsKey(functionName)) return
 
-            executor.submit {
-                synchronized(lock) {
-                    if (compiledFunctions.containsKey(functionName)) {
-                        return@synchronized
-                    }
-                    val fn: CompiledFunction? = module.functions.find { it.name == functionName }
-                    if (fn == null) {
-                        System.err.println(
-                                "JIT: function '$functionName' not found in module, skipping compilation."
-                        )
-                        return@synchronized
-                    }
+        val existing = inProgress[functionName]
+        if (existing != null) return
 
-                    try {
-                        val compiled = bytecodeGenerator.compileFunction(fn)
-                        if (compiled != null) {
-                            compiledFunctions[functionName] = compiled
-                            com.compiler.vm.jit.JITRuntime.registerCompiled(functionName, compiled)
-                        } else {
-                            System.err.println(
-                                    "JIT: compilation returned null for function '$functionName'."
-                            )
-                        }
-                    } catch (t: Throwable) {
-                        System.err.println(
-                                "JIT: compilation failed for function '$functionName': ${t.message}"
-                        )
-                        t.printStackTrace(System.err)
-                    }
+        val deferred = CompletableDeferred<CompiledFunctionExecutor?>()
+        val placed = inProgress.putIfAbsent(functionName, deferred)
+        if (placed != null) return
+
+        scope.launch {
+            try {
+                val fn = functionMap[functionName]
+                if (fn == null) {
+                    deferred.complete(null)
+                    return@launch
                 }
+
+                if (!semaphore.tryAcquire(5, TimeUnit.SECONDS)) {
+                    deferred.completeExceptionally(
+                            CancellationException("Couldn't acquire compile slot")
+                    )
+                    return@launch
+                }
+
+                try {
+                    val compiled =
+                            withContext(dispatcher + CoroutineName("jit-compile-$functionName")) {
+                                bytecodeGenerator.compileFunction(fn)
+                            }
+
+                    if (compiled != null) {
+                        val prev = compiledFunctions.putIfAbsent(functionName, compiled)
+                        if (prev == null) {
+                            JITRuntime.registerCompiled(functionName, compiled)
+                        }
+                    }
+
+                    deferred.complete(compiled)
+                } catch (ce: CancellationException) {
+                    deferred.cancel(ce)
+                } catch (t: Throwable) {
+                    deferred.completeExceptionally(t)
+                } finally {
+                    semaphore.release()
+                }
+            } finally {
+                inProgress.remove(functionName)
             }
         }
     }
 
-    override fun getCompiled(functionName: String): CompiledFunctionExecutor? {
-        return compiledFunctions[functionName]
-    }
+    /**
+     * Возвращает скомпилированный executor для функции, если он доступен.
+     *
+     * @param functionName имя функции
+     * @return CompiledFunctionExecutor или null, если функция ещё не скомпилирована
+     */
+    override fun getCompiled(functionName: String): CompiledFunctionExecutor? =
+            compiledFunctions[functionName]
 
+    /**
+     * Возвращает, включён ли JIT.
+     *
+     * @return true если JIT включён
+     */
     override fun isEnabled(): Boolean = enabled
 
-    /** 
-     * Optional helper: force-disable JIT (for tests) 
+    /**
+     * Включает или выключает JIT. Если выключен — recordCall ничего не делает.
+     *
+     * @param value true для включения, false для отключения
      */
     fun setEnabled(value: Boolean) {
         enabled = value
     }
 
-    /** 
-     * Shutdown executor (call from VM shutdown) 
+    /**
+     * Корректно завершает работу JIT: отменяет все активные корутины и останавливает пул потоков.
+     *
+     * После вызова shutdown новые компиляции запланированы не будут.
      */
     fun shutdown() {
+        scope.cancel()
         try {
-            executor.shutdown()
-            executor.awaitTermination(1, TimeUnit.SECONDS)
+            executorService.shutdown()
+            executorService.awaitTermination(1, TimeUnit.SECONDS)
         } catch (ignored: InterruptedException) {}
     }
+
+    /** То же, что shutdown(). Реализует AutoCloseable для удобного использования через `use`. */
+    override fun close() = shutdown()
 }
