@@ -4,11 +4,9 @@ import com.compiler.bytecode.Value
 
 class MemoryManager(
 ) {
-    // Keep gc and heap synchronized
     private val realHeap: Heap = Heap()
     private val realGc: RefCountGC = RefCountGC(realHeap)
 
-    // Create with refCount=1: ownership is given to VM
     fun newIntArray(size: Int): Value.ArrayRef {
         val id = realHeap.allocIntArray(size)
         val ref = Value.ArrayRef(id)

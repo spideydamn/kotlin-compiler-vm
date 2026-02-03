@@ -7,9 +7,9 @@ import com.compiler.domain.SourcePos
  * Converts source code into a sequence of tokens
  */
 class Lexer(private val source: String) {
-    private var current = 0  // current position in source
-    private var line = 1     // current line
-    private var column = 1   // current pos
+    private var current = 0
+    private var line = 1
+    private var column = 1
     
     private val tokens = mutableListOf<Token>()
 
@@ -36,7 +36,6 @@ class Lexer(private val source: String) {
             scanToken()
         }
         
-        // Add EOF token at the end
         tokens.add(Token(TokenType.EOF, "", pos = SourcePos(line, column)))
         return tokens
     }
@@ -49,7 +48,6 @@ class Lexer(private val source: String) {
         val c = advance()
         
         when (c) {
-            // Whitespace characters
             ' ', '\r', '\t' -> { /* ignore */ }
             '\n' -> {
                 line++
@@ -57,28 +55,25 @@ class Lexer(private val source: String) {
                 return
             }
             
-            // Single character tokens
             '(' -> addToken(TokenType.LPAREN, "(", startColumn)
             ')' -> addToken(TokenType.RPAREN, ")", startColumn)
             '{' -> addToken(TokenType.LBRACE, "{", startColumn)
             '}' -> addToken(TokenType.RBRACE, "}", startColumn)
-            // Square brackets for array types, array initialization (int[10]), and array indexing (arr[0])
+
             '[' -> addToken(TokenType.LBRACKET, "[", startColumn)
             ']' -> addToken(TokenType.RBRACKET, "]", startColumn)
             ';' -> addToken(TokenType.SEMICOLON, ";", startColumn)
             ':' -> addToken(TokenType.COLON, ":", startColumn)
             ',' -> addToken(TokenType.COMMA, ",", startColumn)
-            // Dot operator (currently not used for array properties like .length or .append)
+            
             '.' -> addToken(TokenType.DOT, ".", startColumn)
             '+' -> addToken(TokenType.PLUS, "+", startColumn)
             '-' -> addToken(TokenType.MINUS, "-", startColumn)
             '*' -> addToken(TokenType.STAR, "*", startColumn)
             '%' -> addToken(TokenType.PERCENT, "%", startColumn)
             
-            // Two-character operators
             '/' -> {
                 if (match('/')) {
-                    // Comment until end of line
                     while (peek() != '\n' && !isAtEnd()) {
                         advance()
                     }
@@ -135,10 +130,8 @@ class Lexer(private val source: String) {
                 }
             }
             
-            // Numbers
             in '0'..'9' -> number(startColumn)
             
-            // Identifiers and keywords
             in 'a'..'z', in 'A'..'Z', '_' -> identifier(startColumn)
             
             else -> error(startColumn, "Unexpected character: '$c'")
@@ -151,29 +144,26 @@ class Lexer(private val source: String) {
     private fun number(startColumn: Int) {
         val start = current - 1
         
-        // Integer part
         while (peek().isDigit()) {
             advance()
         }
         
-        // Check for fractional part
         var isFloat = false
         if (peek() == '.' && peekNext().isDigit()) {
             isFloat = true
-            advance() // consume '.'
+            advance()
             
             while (peek().isDigit()) {
                 advance()
             }
         }
         
-        // Check for exponential part (e or E)
         if (peek() == 'e' || peek() == 'E') {
             isFloat = true
-            advance() // consume 'e' or 'E'
+            advance()
             
             if (peek() == '+' || peek() == '-') {
-                advance() // consume sign
+                advance()
             }
             
             if (!peek().isDigit()) {

@@ -45,19 +45,15 @@ class ReferenceCountingGCTest {
         val stack = RcOperandStack(mm)
         val locals = RcLocals(mm, size = 1)
 
-        // NEW_ARRAY_INT: получили refCount=1, считаем что это "временный результат инструкции"
         val ref = mm.newIntArray(5)
 
-        // Положили на стек MOVE (как сделал бы интерпретатор)
         stack.pushMove(ref)
         assertEquals(1, mm.debugRefCount(ref))
 
-        // STORE_LOCAL: popMove (ownership передали) -> locals.setMove (ownership у locals)
         val v = stack.popMove()
         locals.setMove(0, v)
         assertEquals(1, mm.debugRefCount(ref))
 
-        // Уберём из locals => release => free
         locals.clear(0)
         assertEquals(0, mm.debugHeapObjectCount())
     }
@@ -69,19 +65,16 @@ class ReferenceCountingGCTest {
         val locals = RcLocals(mm, size = 1)
 
         val ref = mm.newIntArray(2)
-        locals.setMove(0, ref) // locals владеет (refCount=1)
+        locals.setMove(0, ref)
         assertEquals(1, mm.debugRefCount(ref))
 
-        // LOAD_LOCAL должен делать COPY (retain)
         val copied = locals.getCopy(0)
-        stack.pushMove(copied) // стек принимает владение уже-retain'нутого значения как move
+        stack.pushMove(copied)
         assertEquals(2, mm.debugRefCount(ref))
 
-        // POP выбрасывает со стека => release => refCount обратно 1
         stack.popDrop()
         assertEquals(1, mm.debugRefCount(ref))
 
-        // очистка locals => free
         locals.clearAndReleaseAll()
         assertEquals(0, mm.debugHeapObjectCount())
     }

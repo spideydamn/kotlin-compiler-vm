@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test
 
 class ParserTest {
 
-        // --- Helpers to quickly build tokens ---
         private fun token(
                 type: TokenType,
                 lexeme: String = type.name,
@@ -26,7 +25,6 @@ class ParserTest {
         private fun strLex(type: TokenType, lex: String) = token(type, lex)
         private fun eof() = token(TokenType.EOF, "")
 
-        // --- Small sanity test: variable declaration ---
         @Test
         fun `parse single variable declaration`() {
                 val tokens =
@@ -54,7 +52,6 @@ class ParserTest {
                 assertEquals(42L, (varDecl.expression as LiteralExpr).value)
         }
 
-        // --- Function declaration with no parameters, void return and empty body ---
         @Test
         fun `parse simple function declaration`() {
                 val tokens =
@@ -83,7 +80,6 @@ class ParserTest {
                 assertTrue(fn.body.statements.isEmpty())
         }
 
-        // --- If / else parsing ---
         @Test
         fun `parse if else statement`() {
                 val tokens =
@@ -95,7 +91,6 @@ class ParserTest {
                                 intLit(0L),
                                 token(TokenType.RPAREN),
                                 token(TokenType.LBRACE),
-                                // then: x = 1;
                                 ident("x"),
                                 token(TokenType.ASSIGN),
                                 intLit(1L),
@@ -103,7 +98,6 @@ class ParserTest {
                                 token(TokenType.RBRACE),
                                 token(TokenType.ELSE),
                                 token(TokenType.LBRACE),
-                                // else: x = 0;
                                 ident("x"),
                                 token(TokenType.ASSIGN),
                                 intLit(0L),
@@ -122,7 +116,6 @@ class ParserTest {
                 assertTrue(cond is BinaryExpr)
                 assertEquals(TokenType.GT, (cond as BinaryExpr).operator)
 
-                // Проверяем блок thenBranch
                 val thenBranch = ifStmt.thenBranch
                 val thenStmts = (thenBranch).statements
                 assertEquals(1, thenStmts.size)
@@ -130,7 +123,6 @@ class ParserTest {
                 val thenExpr = (thenStmts[0] as ExprStmt).expr
                 assertTrue(thenExpr is AssignExpr)
 
-                // Проверяем блок elseBranch
                 val elseBranch = ifStmt.elseBranch
                 assertTrue(elseBranch is BlockStmt)
                 val elseStmts = (elseBranch as BlockStmt).statements
@@ -140,14 +132,12 @@ class ParserTest {
                 assertTrue(elseExpr is AssignExpr)
         }
 
-        // --- For: classic three-part for loop ---
         @Test
         fun `parse classic for statement`() {
                 val tokens =
                         listOf(
                                 token(TokenType.FOR),
                                 token(TokenType.LPAREN),
-                                // initializer: let i: int = 0;
                                 token(TokenType.LET),
                                 ident("i"),
                                 token(TokenType.COLON),
@@ -155,12 +145,10 @@ class ParserTest {
                                 token(TokenType.ASSIGN),
                                 intLit(0L),
                                 token(TokenType.SEMICOLON),
-                                // condition: i < 10
                                 ident("i"),
                                 token(TokenType.LT),
                                 intLit(10L),
                                 token(TokenType.SEMICOLON),
-                                // increment: i = i + 1
                                 ident("i"),
                                 token(TokenType.ASSIGN),
                                 ident("i"),
@@ -168,7 +156,6 @@ class ParserTest {
                                 intLit(1L),
                                 token(TokenType.RPAREN),
                                 token(TokenType.LBRACE),
-                                // body: i = i;
                                 ident("i"),
                                 token(TokenType.ASSIGN),
                                 ident("i"),
@@ -184,7 +171,6 @@ class ParserTest {
                 val forStmt = program.statements[0]
                 assertTrue(forStmt is ForStmt)
                 val f = forStmt as ForStmt
-                // Инициализатор теперь ForInitializer (ForVarInit / ForExprInit / ForNoInit)
                 assertTrue(f.initializer is ForVarInit)
                 val initDecl = (f.initializer as ForVarInit).decl
                 assertEquals("i", initDecl.identifier)
@@ -192,18 +178,16 @@ class ParserTest {
                 assertNotNull(f.increment)
         }
 
-        // --- Array allocation and indexing test ---
         @Test
         fun `parse array allocation and access`() {
                 val tokens =
                         listOf(
-                                // let arr: int[] = int[3];
                                 token(TokenType.LET),
                                 ident("arr"),
                                 token(TokenType.COLON),
                                 token(TokenType.TYPE_INT),
                                 token(TokenType.LBRACKET),
-                                token(TokenType.RBRACKET), // int[]
+                                token(TokenType.RBRACKET),
                                 token(TokenType.ASSIGN),
                                 token(TokenType.TYPE_INT),
                                 token(TokenType.LBRACKET),
@@ -211,7 +195,6 @@ class ParserTest {
                                 token(TokenType.RBRACKET),
                                 token(TokenType.SEMICOLON),
 
-                                // let first: int = arr[0];
                                 token(TokenType.LET),
                                 ident("first"),
                                 token(TokenType.COLON),
@@ -233,9 +216,7 @@ class ParserTest {
                 val arrDecl = program.statements[0] as VarDecl
                 assertTrue(arrDecl.expression is ArrayInitExpr)
                 val arrInit = arrDecl.expression as ArrayInitExpr
-                // элементный тип — int
                 assertEquals(TypeNode.IntType, arrInit.elementType)
-                // размер — литерал 3
                 val sizeExpr = arrInit.size
                 assertTrue(sizeExpr is LiteralExpr)
                 assertEquals(3L, (sizeExpr as LiteralExpr).value)
@@ -244,12 +225,10 @@ class ParserTest {
                 assertTrue(firstDecl.expression is ArrayAccessExpr)
         }
 
-        // --- Function call + assignment chain ---
         @Test
         fun `parse call and assignment`() {
                 val tokens =
                         listOf(
-                                // let r: int = foo(1, 2);
                                 token(TokenType.LET),
                                 ident("r"),
                                 token(TokenType.COLON),
@@ -274,14 +253,10 @@ class ParserTest {
                 assertEquals(2, call.args.size)
         }
 
-        // --- Complex: factorial function + main call (structural equality) ---
         @Test
         fun `parse factorial program`() {
                 val tokens = mutableListOf<Token>()
 
-                // func factorial(n: int): int { if (n <= 1) { return 1; } else { return n *
-                // factorial(n -
-                // 1); } }
                 tokens += token(TokenType.FUNC)
                 tokens += ident("factorial")
                 tokens += token(TokenType.LPAREN)
@@ -306,7 +281,6 @@ class ParserTest {
                 tokens += token(TokenType.ELSE)
                 tokens += token(TokenType.LBRACE)
                 tokens += token(TokenType.RETURN)
-                // n * factorial(n - 1);
                 tokens += ident("n")
                 tokens += token(TokenType.STAR)
                 tokens += ident("factorial")
@@ -319,7 +293,6 @@ class ParserTest {
                 tokens += token(TokenType.RBRACE)
                 tokens += token(TokenType.RBRACE)
 
-                // func main(): void { let result: int = factorial(5); print(result); }
                 tokens += token(TokenType.FUNC)
                 tokens += ident("main")
                 tokens += token(TokenType.LPAREN)
@@ -344,19 +317,16 @@ class ParserTest {
                 val p = Parser(tokens)
                 val program = p.parse()
 
-                // Should parse two function declarations
                 assertEquals(2, program.statements.size)
                 assertTrue(program.statements[0] is FunctionDecl)
                 assertTrue(program.statements[1] is FunctionDecl)
 
                 val factorialFn = program.statements[0] as FunctionDecl
                 assertEquals("factorial", factorialFn.identifier)
-                // verify if-body exists and contains return
                 val ifStmt = (factorialFn.body.statements[0] as IfStmt)
                 assertTrue(ifStmt.elseBranch is BlockStmt)
         }
 
-        // --- Logical expressions ---
         @Test
         fun `parse complex logical expression`() {
                 val tokens =
@@ -383,7 +353,6 @@ class ParserTest {
                 val program = Parser(tokens).parse()
                 val decl = program.statements[0] as VarDecl
                 val expr = decl.expression
-                // Проверка типа выражения на BinaryExpr
                 assertTrue(expr is BinaryExpr)
                 val orExpr = expr as BinaryExpr
                 assertEquals(TokenType.OR, orExpr.operator)
@@ -392,7 +361,6 @@ class ParserTest {
                 assertEquals(TokenType.AND, andExpr.operator)
         }
 
-        // --- Unary operators ---
         @Test
         fun `parse unary operators`() {
                 val tokens =
@@ -413,7 +381,6 @@ class ParserTest {
                 assertEquals(TokenType.MINUS, (expr as UnaryExpr).operator)
         }
 
-        // --- Nested blocks ---
         @Test
         fun `parse nested if inside for`() {
                 val tokens =
@@ -458,7 +425,6 @@ class ParserTest {
                 assertTrue(forStmt.body.statements[0] is IfStmt)
         }
 
-        // --- Grouping expressions ---
         @Test
         fun `parse grouped arithmetic expressions`() {
                 val tokens =

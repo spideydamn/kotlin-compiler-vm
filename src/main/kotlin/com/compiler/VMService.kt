@@ -15,10 +15,8 @@ object VMService {
             return
         }
 
-        // Compile to bytecode
         val module = BytecodeService.run(filePath) ?: return
 
-        // Execute on virtual machine
         try {
             val vm = VirtualMachine(module, null)
             val result = vm.execute()
@@ -47,4 +45,3 @@ object VMService {
         }
     }
 }
-

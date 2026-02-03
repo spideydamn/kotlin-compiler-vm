@@ -12,10 +12,13 @@ sealed class Type {
     data class Array(val elementType: Type) : Type()
     object Unknown : Type()
     
-    // Специальные типы для встроенных функций (не используются в пользовательском коде)
-    /** Любой примитивный тип (int, float, bool) */
+    /** 
+     * Любой примитивный тип (int, float, bool) 
+     */
     object Primitive : Type()
-    /** Любой массив (int[], float[], bool[]) */
+    /** 
+     * Любой массив (int[], float[], bool[]) 
+     */
     object AnyArray : Type()
 
     override fun toString(): String = when (this) {
@@ -83,13 +86,10 @@ class Scope(val parent: Scope?) {
         if (to == Type.Unknown || from == Type.Unknown) return true
         if (from == to) return true
         
-        // Специальная логика для встроенных функций
-        // Primitive принимает любой примитивный тип (int, float, bool)
         if (to == Type.Primitive) {
             return from == Type.Int || from == Type.Float || from == Type.Bool
         }
         
-        // AnyArray принимает любой массив
         if (to == Type.AnyArray) {
             return from is Type.Array
         }

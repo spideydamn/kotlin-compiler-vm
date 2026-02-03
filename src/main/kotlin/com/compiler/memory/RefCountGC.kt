@@ -20,7 +20,6 @@ class RefCountGC(private val heap: Heap) {
         }
 
         if (obj.refCount == 0) {
-            // For future objects with references, recursive release on children can be implemented here.
             heap.free(ref.heapId)
         }
     }

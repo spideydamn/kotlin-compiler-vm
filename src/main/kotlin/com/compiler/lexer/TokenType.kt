@@ -5,63 +5,63 @@ package com.compiler.lexer
  */
 enum class TokenType {
     // Keywords
-    LET,        // let
-    FUNC,       // func
-    IF,         // if
-    ELSE,       // else
-    FOR,        // for
-    RETURN,     // return
-    TRUE,       // true
-    FALSE,      // false
+    LET,
+    FUNC,
+    IF,
+    ELSE,
+    FOR,
+    RETURN,
+    TRUE,
+    FALSE,
     
     // Type keywords
-    TYPE_INT,   // int
-    TYPE_FLOAT, // float
-    TYPE_BOOL,  // bool
-    TYPE_VOID,  // void
+    TYPE_INT,
+    TYPE_FLOAT,
+    TYPE_BOOL,
+    TYPE_VOID,
     
     // Identifiers and literals
-    IDENTIFIER, // variable and function names
-    INT_LITERAL,    // 42, 1234567890
-    FLOAT_LITERAL,  // 3.14, 1.0e10
+    IDENTIFIER,
+    INT_LITERAL,
+    FLOAT_LITERAL,
     
     // Arithmetic operators
-    PLUS,       // +
-    MINUS,      // -
-    STAR,       // *
-    SLASH,      // /
-    PERCENT,    // %
+    PLUS,
+    MINUS,
+    STAR,
+    SLASH,
+    PERCENT,
     
     // Comparison operators
-    EQ,         // ==
-    NE,         // !=
-    LT,         // <
-    LE,         // <=
-    GT,         // >
-    GE,         // >=
+    EQ,
+    NE,
+    LT,
+    LE,
+    GT,
+    GE,
     
     // Logical operators
-    AND,        // &&
-    OR,         // ||
-    NOT,        // !
+    AND,
+    OR,
+    NOT,
     
     // Assignment
-    ASSIGN,     // =
+    ASSIGN,
     
     // Delimiters
-    SEMICOLON,  // ;
-    COLON,      // :
-    COMMA,      // ,
-    DOT,        // .
+    SEMICOLON,
+    COLON,
+    COMMA,
+    DOT,
     
     // Brackets
-    LPAREN,     // (
-    RPAREN,     // )
-    LBRACE,     // {
-    RBRACE,     // }
-    LBRACKET,   // [
-    RBRACKET,   // ]
+    LPAREN,
+    RPAREN,
+    LBRACE,
+    RBRACE,
+    LBRACKET,
+    RBRACKET,
     
     // Special
-    EOF         // end of file
+    EOF
 }

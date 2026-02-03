@@ -126,8 +126,6 @@ class SemanticAnalyzerTest {
         )
     }
 
-    // ========== Tests for built-in print function ==========
-
     @Test
     fun `print with primitive types is valid`() {
         val source = """

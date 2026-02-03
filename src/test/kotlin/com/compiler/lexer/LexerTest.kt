@@ -78,7 +78,7 @@ class LexerTest {
         assertEquals(0L, tokens[0].literal)
         assertEquals(42L, tokens[1].literal)
         assertEquals(123L, tokens[2].literal)
-        assertEquals(9223372036854775807L, tokens[3].literal) // max Long
+        assertEquals(9223372036854775807L, tokens[3].literal)
     }
     
     @Test
@@ -211,9 +211,9 @@ class LexerTest {
         assertEquals(
             listOf(
                 TokenType.FUNC,
-                TokenType.IDENTIFIER, // factorial
+                TokenType.IDENTIFIER,
                 TokenType.LPAREN,
-                TokenType.IDENTIFIER, // n
+                TokenType.IDENTIFIER,
                 TokenType.COLON,
                 TokenType.TYPE_INT,
                 TokenType.RPAREN,
@@ -221,7 +221,7 @@ class LexerTest {
                 TokenType.TYPE_INT,
                 TokenType.LBRACE,
                 TokenType.RETURN,
-                TokenType.IDENTIFIER, // n
+                TokenType.IDENTIFIER,
                 TokenType.SEMICOLON,
                 TokenType.RBRACE,
                 TokenType.EOF
@@ -368,7 +368,6 @@ class LexerTest {
         
         val types = tokenTypes(source)
         
-        // Комментарии должны быть проигнорированы
         assertEquals(
             listOf(
                 TokenType.LET,
@@ -405,7 +404,6 @@ class LexerTest {
         
         val tokens = tokenize(source)
         
-        // Проверяем, что токенизация прошла успешно
         assert(tokens.isNotEmpty())
         assertEquals(TokenType.FUNC, tokens[0].type)
         assertEquals(TokenType.EOF, tokens.last().type)
@@ -424,7 +422,6 @@ class LexerTest {
         val source = "let x: int = 42;"
         val tokens = tokenize(source)
         
-        // Все токены должны быть на строке 1
         tokens.forEach { token ->
             if (token.type != TokenType.EOF) {
                 assertEquals(1, token.pos.line)
@@ -441,10 +438,8 @@ class LexerTest {
         
         val tokens = tokenize(source)
         
-        // Первая let на строке 1
         assertEquals(1, tokens[0].pos.line)
         
-        // Вторая let на строке 2
         val secondLet = tokens.first { it.lexeme == "let" && it.pos.line == 2 }
         assertEquals(2, secondLet.pos.line)
     }

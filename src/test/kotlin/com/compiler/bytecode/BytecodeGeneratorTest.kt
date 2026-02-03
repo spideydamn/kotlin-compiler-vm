@@ -44,7 +44,6 @@ class BytecodeGeneratorTest {
         assertTrue(instructions.contains(Opcodes.STORE_LOCAL), "Should contain STORE_LOCAL for variable")
         assertEquals(0, instructions.size % 4, "Instructions should be in 4-byte format")
         
-        // Check constant pool
         assertTrue(module.intConstants.contains(42L))
     }
     
@@ -63,7 +62,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Check arithmetic instructions
         assertTrue(instructions.contains(Opcodes.ADD_INT), "Should contain ADD_INT")
         assertTrue(instructions.contains(Opcodes.SUB_INT), "Should contain SUB_INT")
         assertTrue(instructions.contains(Opcodes.MUL_INT), "Should contain MUL_INT")
@@ -71,7 +69,6 @@ class BytecodeGeneratorTest {
         assertTrue(instructions.contains(Opcodes.STORE_LOCAL), "Should contain STORE_LOCAL")
         assertEquals(0, instructions.size % 4, "Instructions should be in 4-byte format")
         
-        // Check constants are in pool
         assertTrue(module.intConstants.contains(5L))
         assertTrue(module.intConstants.contains(3L))
         assertTrue(module.intConstants.contains(10L))
@@ -113,7 +110,7 @@ class BytecodeGeneratorTest {
         val module = compile(source)
         
         val main = module.functions[0]
-        assertEquals(2, main.localsCount) // x and y
+        assertEquals(2, main.localsCount)
         
         val instructions = main.instructions
         assertTrue(instructions.contains(Opcodes.PUSH_BOOL), "Should contain PUSH_BOOL")
@@ -205,25 +202,19 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should have JUMP instructions for loop
         assertTrue(instructions.contains(Opcodes.JUMP), "Should contain JUMP instruction for loop")
         assertTrue(instructions.contains(Opcodes.JUMP_IF_FALSE), "Should contain JUMP_IF_FALSE for condition")
         
-        // Should have STORE_LOCAL for loop variable i
         assertTrue(instructions.contains(Opcodes.STORE_LOCAL), "Should contain STORE_LOCAL for loop variable")
         
-        // Should have LOAD_LOCAL for accessing i
         assertTrue(instructions.contains(Opcodes.LOAD_LOCAL), "Should contain LOAD_LOCAL for accessing loop variable")
         
-        // Should have comparison instruction (LT_INT)
         assertTrue(instructions.contains(Opcodes.LT_INT), "Should contain LT_INT for condition")
         
-        // Check constants
         assertTrue(module.intConstants.contains(0L), "Should have constant 0")
         assertTrue(module.intConstants.contains(10L), "Should have constant 10")
         assertTrue(module.intConstants.contains(1L), "Should have constant 1")
         
-        // Check locals: i (parameter of for loop) and x (local in loop body)
         assertTrue(main.localsCount >= 1, "Should have at least loop variable i")
     }
     
@@ -245,7 +236,6 @@ class BytecodeGeneratorTest {
         assertEquals("factorial", module.functions[0].name)
         assertEquals("main", module.functions[1].name)
         
-        // Check function indices
         val factorialIndex = module.functions.indexOfFirst { it.name == "factorial" }
         val mainIndex = module.functions.indexOfFirst { it.name == "main" }
         assertNotEquals(-1, factorialIndex)
@@ -400,7 +390,6 @@ class BytecodeGeneratorTest {
         
         val module = compile(source)
         
-        // Constant 5 should appear only once in pool
         assertEquals(1, module.intConstants.count { it == 5L })
         assertTrue(module.intConstants.contains(5L))
     }
@@ -709,7 +698,7 @@ class BytecodeGeneratorTest {
         val add = module.functions.find { it.name == "add" }
         assertNotNull(add)
         assertEquals(2, add!!.parameters.size)
-        assertEquals(2, add.localsCount) // parameters only
+        assertEquals(2, add.localsCount)
         
         val multiply = module.functions.find { it.name == "multiply" }
         assertNotNull(multiply)
@@ -731,7 +720,7 @@ class BytecodeGeneratorTest {
         assertEquals("x", func.parameters[0].name)
         assertEquals("y", func.parameters[1].name)
         assertEquals("z", func.parameters[2].name)
-        assertEquals(4, func.localsCount) // 3 parameters + 1 local variable
+        assertEquals(4, func.localsCount)
     }
     
     @Test
@@ -746,7 +735,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain PUSH_INT (0x01)
         assertTrue(instructions.contains(Opcodes.PUSH_INT), "Should contain PUSH_INT instruction")
     }
     
@@ -762,7 +750,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain STORE_LOCAL (0x11)
         assertTrue(instructions.contains(Opcodes.STORE_LOCAL), "Should contain STORE_LOCAL instruction")
     }
     
@@ -778,7 +765,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain ADD_INT (0x20)
         assertTrue(instructions.contains(Opcodes.ADD_INT), "Should contain ADD_INT instruction")
     }
     
@@ -794,7 +780,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain ADD_FLOAT (0x30)
         assertTrue(instructions.contains(Opcodes.ADD_FLOAT), "Should contain ADD_FLOAT instruction")
     }
     
@@ -811,7 +796,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain LOAD_LOCAL (0x10)
         assertTrue(instructions.contains(Opcodes.LOAD_LOCAL), "Should contain LOAD_LOCAL instruction")
     }
     
@@ -829,7 +813,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain JUMP_IF_FALSE (0x71)
         assertTrue(instructions.contains(Opcodes.JUMP_IF_FALSE), "Should contain JUMP_IF_FALSE instruction")
     }
     
@@ -847,7 +830,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain JUMP (0x70)
         assertTrue(instructions.contains(Opcodes.JUMP), "Should contain JUMP instruction")
     }
     
@@ -868,7 +850,6 @@ class BytecodeGeneratorTest {
         assertNotNull(main)
         val instructions = main!!.instructions
         
-        // Should contain CALL (0x80)
         assertTrue(instructions.contains(Opcodes.CALL), "Should contain CALL instruction")
     }
     
@@ -884,7 +865,6 @@ class BytecodeGeneratorTest {
         val func = module.functions[0]
         val instructions = func.instructions
         
-        // Should contain RETURN (0x81)
         assertTrue(instructions.contains(Opcodes.RETURN), "Should contain RETURN instruction")
     }
     
@@ -900,7 +880,6 @@ class BytecodeGeneratorTest {
         val func = module.functions[0]
         val instructions = func.instructions
         
-        // Should contain RETURN_VOID (0x82)
         assertTrue(instructions.contains(Opcodes.RETURN_VOID), "Should contain RETURN_VOID instruction")
     }
     
@@ -916,7 +895,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain NEW_ARRAY_INT (0x90)
         assertTrue(instructions.contains(Opcodes.NEW_ARRAY_INT), "Should contain NEW_ARRAY_INT instruction")
     }
     
@@ -933,7 +911,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain ARRAY_LOAD (0x92)
         assertTrue(instructions.contains(Opcodes.ARRAY_LOAD), "Should contain ARRAY_LOAD instruction")
     }
     
@@ -950,7 +927,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain ARRAY_STORE (0x93)
         assertTrue(instructions.contains(Opcodes.ARRAY_STORE), "Should contain ARRAY_STORE instruction")
     }
     
@@ -966,7 +942,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain PRINT (0xA0)
         assertTrue(instructions.contains(Opcodes.PRINT), "Should contain PRINT instruction")
     }
     
@@ -983,7 +958,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Should contain PRINT_ARRAY (0xA1)
         assertTrue(instructions.contains(Opcodes.PRINT_ARRAY), "Should contain PRINT_ARRAY instruction")
     }
     
@@ -999,8 +973,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Expected sequence: PUSH_INT, PUSH_INT, ADD_INT, STORE_LOCAL
-        // Check that all required instructions are present
         assertTrue(instructions.contains(Opcodes.PUSH_INT))
         assertTrue(instructions.contains(Opcodes.ADD_INT))
         assertTrue(instructions.contains(Opcodes.STORE_LOCAL))
@@ -1018,8 +990,6 @@ class BytecodeGeneratorTest {
         val main = module.functions[0]
         val instructions = main.instructions
         
-        // Each instruction should be 4 bytes
-        // Total size should be divisible by 4
         assertEquals(0, instructions.size % 4, "Instructions should be in 4-byte format")
     }
     
@@ -1036,7 +1006,6 @@ class BytecodeGeneratorTest {
         assertEquals("main", main.name)
         
         val instructions = main.instructions
-        // Empty void function should have RETURN_VOID
         assertTrue(instructions.contains(Opcodes.RETURN_VOID), "Should contain RETURN_VOID for empty void function")
     }
     
@@ -1119,25 +1088,18 @@ class BytecodeGeneratorTest {
         assertEquals("main", main.name)
         
         val instructions = main.instructions
-        // Should have variable declarations
         assertTrue(instructions.contains(Opcodes.PUSH_INT), "Should contain PUSH_INT")
         assertTrue(instructions.contains(Opcodes.STORE_LOCAL), "Should contain STORE_LOCAL")
-        // Should have arithmetic operations
         assertTrue(instructions.contains(Opcodes.ADD_INT), "Should contain ADD_INT for sum")
         assertTrue(instructions.contains(Opcodes.MUL_INT), "Should contain MUL_INT for product")
-        // Should have comparison
         assertTrue(instructions.contains(Opcodes.GT_INT), "Should contain GT_INT for comparison")
-        // Should have print calls
         assertTrue(instructions.contains(Opcodes.PRINT), "Should contain PRINT for output")
         
-        // Check constants
         assertTrue(module.intConstants.contains(42L), "Should have constant 42")
         assertTrue(module.intConstants.contains(10L), "Should have constant 10")
         
-        // Check locals count (x, y, sum, product, flag)
         assertEquals(5, main.localsCount)
         
-        // Should end with RETURN_VOID
         assertTrue(instructions.contains(Opcodes.RETURN_VOID), "Should contain RETURN_VOID")
     }
     
@@ -1148,13 +1110,11 @@ class BytecodeGeneratorTest {
         
         assertEquals(2, module.functions.size)
         
-        // Find factorial function
         val factorial = module.functions.find { it.name == "factorial" }
             ?: fail("Should have factorial function")
         val main = module.functions.find { it.name == "main" }
             ?: fail("Should have main function")
         
-        // Check factorial function
         val factInstructions = factorial.instructions
         assertTrue(factInstructions.contains(Opcodes.RETURN), "Should contain RETURN with value")
         assertTrue(factInstructions.contains(Opcodes.CALL), "Should contain CALL for recursion")
@@ -1162,11 +1122,9 @@ class BytecodeGeneratorTest {
         assertTrue(factInstructions.contains(Opcodes.MUL_INT), "Should contain MUL_INT for multiplication")
         assertTrue(factInstructions.contains(Opcodes.SUB_INT), "Should contain SUB_INT for n - 1")
         
-        // Check constants
         assertTrue(module.intConstants.contains(1L), "Should have constant 1")
         assertTrue(module.intConstants.contains(20L), "Should have constant 20")
         
-        // Check main function
         val mainInstructions = main.instructions
         assertTrue(mainInstructions.contains(Opcodes.CALL), "Should contain CALL to factorial")
         assertTrue(mainInstructions.contains(Opcodes.STORE_LOCAL), "Should store result")
@@ -1187,31 +1145,25 @@ class BytecodeGeneratorTest {
         
         val instructions = sieve.instructions
         
-        // Should have array operations
         assertTrue(instructions.contains(Opcodes.NEW_ARRAY_INT), "Should contain NEW_ARRAY_INT for int arrays")
         assertTrue(instructions.contains(Opcodes.NEW_ARRAY_BOOL), "Should contain NEW_ARRAY_BOOL for bool arrays")
         assertTrue(instructions.contains(Opcodes.ARRAY_STORE), "Should contain ARRAY_STORE")
         assertTrue(instructions.contains(Opcodes.ARRAY_LOAD), "Should contain ARRAY_LOAD")
         
-        // Should have loop operations
         assertTrue(instructions.contains(Opcodes.JUMP), "Should contain JUMP for loops")
         assertTrue(instructions.contains(Opcodes.JUMP_IF_FALSE), "Should contain JUMP_IF_FALSE")
         
-        // Should have arithmetic operations
         assertTrue(instructions.contains(Opcodes.ADD_INT), "Should contain ADD_INT")
         assertTrue(instructions.contains(Opcodes.MUL_INT), "Should contain MUL_INT")
         assertTrue(instructions.contains(Opcodes.LE_INT), "Should contain LE_INT for comparisons")
         
-        // Should have return
         assertTrue(instructions.contains(Opcodes.RETURN), "Should contain RETURN with array")
         
-        // Check main function
         val mainInstructions = main.instructions
         assertTrue(mainInstructions.contains(Opcodes.CALL), "Should contain CALL to sieve")
         assertTrue(mainInstructions.contains(Opcodes.STORE_LOCAL), "Should store result")
         assertTrue(mainInstructions.contains(Opcodes.PRINT_ARRAY), "Should contain PRINT_ARRAY for output")
         
-        // Check constants
         assertTrue(module.intConstants.contains(0L), "Should have constant 0")
         assertTrue(module.intConstants.contains(1L), "Should have constant 1")
         assertTrue(module.intConstants.contains(2L), "Should have constant 2")
@@ -1232,7 +1184,6 @@ class BytecodeGeneratorTest {
         val main = module.functions.find { it.name == "main" }
             ?: fail("Should have main function")
         
-        // Check mergeSort function
         val mergeSortInstructions = mergeSort.instructions
         assertTrue(mergeSortInstructions.contains(Opcodes.CALL), "Should contain CALL for recursion")
         assertTrue(mergeSortInstructions.contains(Opcodes.NEW_ARRAY_INT), "Should contain NEW_ARRAY_INT")
@@ -1243,7 +1194,6 @@ class BytecodeGeneratorTest {
         assertTrue(mergeSortInstructions.contains(Opcodes.SUB_INT), "Should contain SUB_INT for size - mid")
         assertTrue(mergeSortInstructions.contains(Opcodes.ADD_INT), "Should contain ADD_INT for mid + i")
         
-        // Check merge function
         val mergeInstructions = merge.instructions
         assertTrue(mergeInstructions.contains(Opcodes.NEW_ARRAY_INT), "Should contain NEW_ARRAY_INT")
         assertTrue(mergeInstructions.contains(Opcodes.ARRAY_STORE), "Should contain ARRAY_STORE")
@@ -1251,7 +1201,6 @@ class BytecodeGeneratorTest {
         assertTrue(mergeInstructions.contains(Opcodes.LE_INT), "Should contain LE_INT for comparison")
         assertTrue(mergeInstructions.contains(Opcodes.RETURN), "Should contain RETURN")
         
-        // Check main function
         val mainInstructions = main.instructions
         assertTrue(mainInstructions.contains(Opcodes.NEW_ARRAY_INT), "Should contain NEW_ARRAY_INT for array initialization")
         assertTrue(mainInstructions.contains(Opcodes.ARRAY_STORE), "Should contain ARRAY_STORE for array initialization")
@@ -1262,7 +1211,6 @@ class BytecodeGeneratorTest {
         assertTrue(mainInstructions.contains(Opcodes.JUMP_IF_FALSE), "Should contain JUMP_IF_FALSE for loop condition")
         assertTrue(mainInstructions.contains(Opcodes.SUB_INT), "Should contain SUB_INT for 99999 - i")
         
-        // Check constants
         assertTrue(module.intConstants.contains(0L), "Should have constant 0")
         assertTrue(module.intConstants.contains(1L), "Should have constant 1")
         assertTrue(module.intConstants.contains(2L), "Should have constant 2")

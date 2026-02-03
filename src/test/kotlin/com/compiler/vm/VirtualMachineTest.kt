@@ -10,8 +10,6 @@ import java.io.PrintStream
 
 class VirtualMachineTest {
 
-    // ========== Helper Functions ==========
-
     private fun createModule(
         intConstants: List<Long> = emptyList(),
         floatConstants: List<Double> = emptyList(),
@@ -51,12 +49,10 @@ class VirtualMachineTest {
         )
     }
 
-    // ========== Constant Tests ==========
-
     @Test
     fun `push int constant`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // constant index
+        builder.emit(Opcodes.PUSH_INT, 0)
         builder.emit(Opcodes.RETURN_VOID)
 
         val module = createModule(
@@ -72,7 +68,7 @@ class VirtualMachineTest {
     @Test
     fun `push float constant`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_FLOAT, 0) // constant index
+        builder.emit(Opcodes.PUSH_FLOAT, 0)
         builder.emit(Opcodes.RETURN_VOID)
 
         val module = createModule(
@@ -88,7 +84,7 @@ class VirtualMachineTest {
     @Test
     fun `push bool true`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_BOOL, 1) // true
+        builder.emit(Opcodes.PUSH_BOOL, 1)
         builder.emit(Opcodes.RETURN_VOID)
 
         val module = createModule(functions = listOf(createMainFunction(builder.build())))
@@ -100,7 +96,7 @@ class VirtualMachineTest {
     @Test
     fun `push bool false`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_BOOL, 0) // false
+        builder.emit(Opcodes.PUSH_BOOL, 0)
         builder.emit(Opcodes.RETURN_VOID)
 
         val module = createModule(functions = listOf(createMainFunction(builder.build())))
@@ -112,7 +108,7 @@ class VirtualMachineTest {
     @Test
     fun `invalid constant index returns error`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 999) // invalid index
+        builder.emit(Opcodes.PUSH_INT, 999)
 
         val module = createModule(
             intConstants = listOf(42L),
@@ -124,14 +120,12 @@ class VirtualMachineTest {
         assertEquals(VMResult.INVALID_CONSTANT_INDEX, result)
     }
 
-    // ========== Local Variable Tests ==========
-
     @Test
     fun `store and load local`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // constant 100
-        builder.emit(Opcodes.STORE_LOCAL, 0) // store to local[0]
-        builder.emit(Opcodes.LOAD_LOCAL, 0) // load from local[0]
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.STORE_LOCAL, 0)
+        builder.emit(Opcodes.LOAD_LOCAL, 0)
         builder.emit(Opcodes.RETURN_VOID)
 
         val module = createModule(
@@ -148,7 +142,7 @@ class VirtualMachineTest {
     fun `invalid local index returns error`() {
         val builder = InstructionBuilder()
         builder.emit(Opcodes.PUSH_INT, 0)
-        builder.emit(Opcodes.STORE_LOCAL, 999) // invalid index
+        builder.emit(Opcodes.STORE_LOCAL, 999)
 
         val module = createModule(
             intConstants = listOf(100L),
@@ -160,13 +154,11 @@ class VirtualMachineTest {
         assertEquals(VMResult.INVALID_LOCAL_INDEX, result)
     }
 
-    // ========== Integer Arithmetic Tests ==========
-
     @Test
     fun `add int`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // 10
-        builder.emit(Opcodes.PUSH_INT, 1) // 20
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.PUSH_INT, 1)
         builder.emit(Opcodes.ADD_INT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -183,8 +175,8 @@ class VirtualMachineTest {
     @Test
     fun `sub int`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // 20
-        builder.emit(Opcodes.PUSH_INT, 1) // 10
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.PUSH_INT, 1)
         builder.emit(Opcodes.SUB_INT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -201,8 +193,8 @@ class VirtualMachineTest {
     @Test
     fun `mul int`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // 5
-        builder.emit(Opcodes.PUSH_INT, 1) // 6
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.PUSH_INT, 1)
         builder.emit(Opcodes.MUL_INT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -219,8 +211,8 @@ class VirtualMachineTest {
     @Test
     fun `div int`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // 20
-        builder.emit(Opcodes.PUSH_INT, 1) // 4
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.PUSH_INT, 1)
         builder.emit(Opcodes.DIV_INT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -237,8 +229,8 @@ class VirtualMachineTest {
     @Test
     fun `division by zero returns error`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // 10
-        builder.emit(Opcodes.PUSH_INT, 1) // 0
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.PUSH_INT, 1)
         builder.emit(Opcodes.DIV_INT)
 
         val module = createModule(
@@ -254,8 +246,8 @@ class VirtualMachineTest {
     @Test
     fun `mod int`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // 17
-        builder.emit(Opcodes.PUSH_INT, 1) // 5
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.PUSH_INT, 1)
         builder.emit(Opcodes.MOD_INT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -272,7 +264,7 @@ class VirtualMachineTest {
     @Test
     fun `neg int`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // 42
+        builder.emit(Opcodes.PUSH_INT, 0)
         builder.emit(Opcodes.NEG_INT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -289,8 +281,8 @@ class VirtualMachineTest {
     @Test
     fun `stack underflow on arithmetic`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // only one value
-        builder.emit(Opcodes.ADD_INT) // need two
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.ADD_INT)
 
         val module = createModule(
             intConstants = listOf(10L),
@@ -302,13 +294,11 @@ class VirtualMachineTest {
         assertEquals(VMResult.STACK_UNDERFLOW, result)
     }
 
-    // ========== Float Arithmetic Tests ==========
-
     @Test
     fun `add float`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_FLOAT, 0) // 1.5
-        builder.emit(Opcodes.PUSH_FLOAT, 1) // 2.5
+        builder.emit(Opcodes.PUSH_FLOAT, 0)
+        builder.emit(Opcodes.PUSH_FLOAT, 1)
         builder.emit(Opcodes.ADD_FLOAT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -325,8 +315,8 @@ class VirtualMachineTest {
     @Test
     fun `div float`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_FLOAT, 0) // 10.0
-        builder.emit(Opcodes.PUSH_FLOAT, 1) // 2.0
+        builder.emit(Opcodes.PUSH_FLOAT, 0)
+        builder.emit(Opcodes.PUSH_FLOAT, 1)
         builder.emit(Opcodes.DIV_FLOAT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -343,7 +333,7 @@ class VirtualMachineTest {
     @Test
     fun `neg float`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_FLOAT, 0) // 3.14
+        builder.emit(Opcodes.PUSH_FLOAT, 0)
         builder.emit(Opcodes.NEG_FLOAT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -357,13 +347,11 @@ class VirtualMachineTest {
         assertEquals(VMResult.SUCCESS, result)
     }
 
-    // ========== Integer Comparison Tests ==========
-
     @Test
     fun `eq int`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // 10
-        builder.emit(Opcodes.PUSH_INT, 0) // 10
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.PUSH_INT, 0)
         builder.emit(Opcodes.EQ_INT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -380,8 +368,8 @@ class VirtualMachineTest {
     @Test
     fun `lt int`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // 5
-        builder.emit(Opcodes.PUSH_INT, 1) // 10
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.PUSH_INT, 1)
         builder.emit(Opcodes.LT_INT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -398,8 +386,8 @@ class VirtualMachineTest {
     @Test
     fun `gt int`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // 10
-        builder.emit(Opcodes.PUSH_INT, 1) // 5
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.PUSH_INT, 1)
         builder.emit(Opcodes.GT_INT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -413,13 +401,11 @@ class VirtualMachineTest {
         assertEquals(VMResult.SUCCESS, result)
     }
 
-    // ========== Logical Operation Tests ==========
-
     @Test
     fun `and operation`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_BOOL, 1) // true
-        builder.emit(Opcodes.PUSH_BOOL, 1) // true
+        builder.emit(Opcodes.PUSH_BOOL, 1)
+        builder.emit(Opcodes.PUSH_BOOL, 1)
         builder.emit(Opcodes.AND)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -432,8 +418,8 @@ class VirtualMachineTest {
     @Test
     fun `or operation`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_BOOL, 0) // false
-        builder.emit(Opcodes.PUSH_BOOL, 1) // true
+        builder.emit(Opcodes.PUSH_BOOL, 0)
+        builder.emit(Opcodes.PUSH_BOOL, 1)
         builder.emit(Opcodes.OR)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -446,7 +432,7 @@ class VirtualMachineTest {
     @Test
     fun `not operation`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_BOOL, 1) // true
+        builder.emit(Opcodes.PUSH_BOOL, 1)
         builder.emit(Opcodes.NOT)
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -456,14 +442,12 @@ class VirtualMachineTest {
         assertEquals(VMResult.SUCCESS, result)
     }
 
-    // ========== Control Flow Tests ==========
-
     @Test
     fun `jump forward`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.JUMP, 1) // skip next instruction
-        builder.emit(Opcodes.PUSH_INT, 0) // this instruction will be skipped
-        builder.emit(Opcodes.RETURN_VOID) // jump here
+        builder.emit(Opcodes.JUMP, 1)
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.RETURN_VOID)
 
         val module = createModule(
             intConstants = listOf(42L),
@@ -478,10 +462,10 @@ class VirtualMachineTest {
     @Test
     fun `jump if false - condition false`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_BOOL, 0) // false
-        builder.emit(Opcodes.JUMP_IF_FALSE, 1) // jump if false
-        builder.emit(Opcodes.PUSH_INT, 0) // skip this
-        builder.emit(Opcodes.RETURN_VOID) // jump here
+        builder.emit(Opcodes.PUSH_BOOL, 0)
+        builder.emit(Opcodes.JUMP_IF_FALSE, 1)
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.RETURN_VOID)
 
         val module = createModule(
             intConstants = listOf(42L),
@@ -496,9 +480,9 @@ class VirtualMachineTest {
     @Test
     fun `jump if false - condition true`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_BOOL, 1) // true
-        builder.emit(Opcodes.JUMP_IF_FALSE, 1) // don't jump
-        builder.emit(Opcodes.PUSH_INT, 0) // execute this
+        builder.emit(Opcodes.PUSH_BOOL, 1)
+        builder.emit(Opcodes.JUMP_IF_FALSE, 1)
+        builder.emit(Opcodes.PUSH_INT, 0)
         builder.emit(Opcodes.RETURN_VOID)
 
         val module = createModule(
@@ -514,10 +498,10 @@ class VirtualMachineTest {
     @Test
     fun `jump if true - condition true`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_BOOL, 1) // true
-        builder.emit(Opcodes.JUMP_IF_TRUE, 1) // jump if true
-        builder.emit(Opcodes.PUSH_INT, 0) // skip this
-        builder.emit(Opcodes.RETURN_VOID) // jump here
+        builder.emit(Opcodes.PUSH_BOOL, 1)
+        builder.emit(Opcodes.JUMP_IF_TRUE, 1)
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.RETURN_VOID)
 
         val module = createModule(
             intConstants = listOf(42L),
@@ -529,16 +513,13 @@ class VirtualMachineTest {
         assertEquals(VMResult.SUCCESS, result)
     }
 
-    // ========== Function Tests ==========
-
     @Test
     fun `call function and return`() {
-        // Function add: takes two int, returns int
         val addBuilder = InstructionBuilder()
-        addBuilder.emit(Opcodes.LOAD_LOCAL, 0) // first parameter
-        addBuilder.emit(Opcodes.LOAD_LOCAL, 1) // second parameter
+        addBuilder.emit(Opcodes.LOAD_LOCAL, 0)
+        addBuilder.emit(Opcodes.LOAD_LOCAL, 1)
         addBuilder.emit(Opcodes.ADD_INT)
-        addBuilder.emit(Opcodes.RETURN) // return result
+        addBuilder.emit(Opcodes.RETURN)
 
         val addFunction = createFunction(
             name = "add",
@@ -551,11 +532,10 @@ class VirtualMachineTest {
             instructions = addBuilder.build()
         )
 
-        // main: calls add(10, 20)
         val mainBuilder = InstructionBuilder()
-        mainBuilder.emit(Opcodes.PUSH_INT, 0) // 10
-        mainBuilder.emit(Opcodes.PUSH_INT, 1) // 20
-        mainBuilder.emit(Opcodes.CALL, 1) // call function at index 1 (add)
+        mainBuilder.emit(Opcodes.PUSH_INT, 0)
+        mainBuilder.emit(Opcodes.PUSH_INT, 1)
+        mainBuilder.emit(Opcodes.CALL, 1)
         mainBuilder.emit(Opcodes.RETURN_VOID)
 
         val mainFunction = createMainFunction(mainBuilder.build())
@@ -584,7 +564,7 @@ class VirtualMachineTest {
     @Test
     fun `invalid function index returns error`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.CALL, 999) // invalid index
+        builder.emit(Opcodes.CALL, 999)
 
         val module = createModule(functions = listOf(createMainFunction(builder.build())))
         val vm = VirtualMachine(module)
@@ -592,14 +572,12 @@ class VirtualMachineTest {
         assertEquals(VMResult.INVALID_FUNCTION_INDEX, result)
     }
 
-    // ========== Array Tests ==========
-
     @Test
     fun `new int array`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // size 5
+        builder.emit(Opcodes.PUSH_INT, 0)
         builder.emit(Opcodes.NEW_ARRAY_INT)
-        builder.emit(Opcodes.POP) // remove reference from stack
+        builder.emit(Opcodes.POP)
         builder.emit(Opcodes.RETURN_VOID)
 
         val module = createModule(
@@ -615,7 +593,7 @@ class VirtualMachineTest {
     @Test
     fun `new float array`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // size 3
+        builder.emit(Opcodes.PUSH_INT, 0)
         builder.emit(Opcodes.NEW_ARRAY_FLOAT)
         builder.emit(Opcodes.POP)
         builder.emit(Opcodes.RETURN_VOID)
@@ -633,7 +611,7 @@ class VirtualMachineTest {
     @Test
     fun `new bool array`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // size 2
+        builder.emit(Opcodes.PUSH_INT, 0)
         builder.emit(Opcodes.NEW_ARRAY_BOOL)
         builder.emit(Opcodes.POP)
         builder.emit(Opcodes.RETURN_VOID)
@@ -651,7 +629,7 @@ class VirtualMachineTest {
     @Test
     fun `negative array size returns error`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.PUSH_INT, 0) // -1
+        builder.emit(Opcodes.PUSH_INT, 0)
         builder.emit(Opcodes.NEW_ARRAY_INT)
 
         val module = createModule(
@@ -667,22 +645,19 @@ class VirtualMachineTest {
     @Test
     fun `array load and store int`() {
         val builder = InstructionBuilder()
-        // Create array of size 3
-        builder.emit(Opcodes.PUSH_INT, 0) // size 3
+        builder.emit(Opcodes.PUSH_INT, 0)
         builder.emit(Opcodes.NEW_ARRAY_INT)
-        builder.emit(Opcodes.STORE_LOCAL, 0) // store to local[0]
+        builder.emit(Opcodes.STORE_LOCAL, 0)
         
-        // Write value to index 1
-        builder.emit(Opcodes.LOAD_LOCAL, 0) // array
-        builder.emit(Opcodes.PUSH_INT, 1) // index 1
-        builder.emit(Opcodes.PUSH_INT, 2) // value 42
+        builder.emit(Opcodes.LOAD_LOCAL, 0)
+        builder.emit(Opcodes.PUSH_INT, 1)
+        builder.emit(Opcodes.PUSH_INT, 2)
         builder.emit(Opcodes.ARRAY_STORE)
         
-        // Read value from index 1
-        builder.emit(Opcodes.LOAD_LOCAL, 0) // array
-        builder.emit(Opcodes.PUSH_INT, 1) // index 1
+        builder.emit(Opcodes.LOAD_LOCAL, 0)
+        builder.emit(Opcodes.PUSH_INT, 1)
         builder.emit(Opcodes.ARRAY_LOAD)
-        builder.emit(Opcodes.POP) // remove result
+        builder.emit(Opcodes.POP)
         
         builder.emit(Opcodes.RETURN_VOID)
 
@@ -696,8 +671,6 @@ class VirtualMachineTest {
         assertEquals(VMResult.SUCCESS, result)
     }
 
-    // ========== Built-in Function Tests ==========
-
     @Test
     fun `print int`() {
         val output = ByteArrayOutputStream()
@@ -706,7 +679,7 @@ class VirtualMachineTest {
 
         try {
             val builder = InstructionBuilder()
-            builder.emit(Opcodes.PUSH_INT, 0) // 42
+            builder.emit(Opcodes.PUSH_INT, 0)
             builder.emit(Opcodes.PRINT)
             builder.emit(Opcodes.RETURN_VOID)
 
@@ -732,7 +705,7 @@ class VirtualMachineTest {
 
         try {
             val builder = InstructionBuilder()
-            builder.emit(Opcodes.PUSH_FLOAT, 0) // 3.14
+            builder.emit(Opcodes.PUSH_FLOAT, 0)
             builder.emit(Opcodes.PRINT)
             builder.emit(Opcodes.RETURN_VOID)
 
@@ -758,7 +731,7 @@ class VirtualMachineTest {
 
         try {
             val builder = InstructionBuilder()
-            builder.emit(Opcodes.PUSH_BOOL, 1) // true
+            builder.emit(Opcodes.PUSH_BOOL, 1)
             builder.emit(Opcodes.PRINT)
             builder.emit(Opcodes.RETURN_VOID)
 
@@ -780,28 +753,25 @@ class VirtualMachineTest {
 
         try {
             val builder = InstructionBuilder()
-            // Create array [10, 20, 30]
-            builder.emit(Opcodes.PUSH_INT, 0) // size 3
+            builder.emit(Opcodes.PUSH_INT, 0)
             builder.emit(Opcodes.NEW_ARRAY_INT)
             builder.emit(Opcodes.STORE_LOCAL, 0)
             
-            // Write values
             builder.emit(Opcodes.LOAD_LOCAL, 0)
-            builder.emit(Opcodes.PUSH_INT, 1) // index 0
-            builder.emit(Opcodes.PUSH_INT, 2) // value 10
+            builder.emit(Opcodes.PUSH_INT, 1)
+            builder.emit(Opcodes.PUSH_INT, 2)
             builder.emit(Opcodes.ARRAY_STORE)
             
             builder.emit(Opcodes.LOAD_LOCAL, 0)
-            builder.emit(Opcodes.PUSH_INT, 3) // index 1
-            builder.emit(Opcodes.PUSH_INT, 4) // value 20
+            builder.emit(Opcodes.PUSH_INT, 3)
+            builder.emit(Opcodes.PUSH_INT, 4)
             builder.emit(Opcodes.ARRAY_STORE)
             
             builder.emit(Opcodes.LOAD_LOCAL, 0)
-            builder.emit(Opcodes.PUSH_INT, 5) // index 2
-            builder.emit(Opcodes.PUSH_INT, 6) // value 30
+            builder.emit(Opcodes.PUSH_INT, 5)
+            builder.emit(Opcodes.PUSH_INT, 6)
             builder.emit(Opcodes.ARRAY_STORE)
             
-            // Print array
             builder.emit(Opcodes.LOAD_LOCAL, 0)
             builder.emit(Opcodes.PRINT_ARRAY)
             builder.emit(Opcodes.RETURN_VOID)
@@ -821,12 +791,10 @@ class VirtualMachineTest {
         }
     }
 
-    // ========== Error Tests ==========
-
     @Test
     fun `invalid opcode returns error`() {
         val builder = InstructionBuilder()
-        builder.emit(0xFF.toByte(), 0) // invalid opcode
+        builder.emit(0xFF.toByte(), 0)
 
         val module = createModule(functions = listOf(createMainFunction(builder.build())))
         val vm = VirtualMachine(module)
@@ -837,7 +805,7 @@ class VirtualMachineTest {
     @Test
     fun `stack underflow on return`() {
         val builder = InstructionBuilder()
-        builder.emit(Opcodes.RETURN) // no value on stack
+        builder.emit(Opcodes.RETURN)
 
         val module = createModule(functions = listOf(createMainFunction(builder.build())))
         val vm = VirtualMachine(module)
@@ -845,38 +813,31 @@ class VirtualMachineTest {
         assertEquals(VMResult.STACK_UNDERFLOW, result)
     }
 
-    // ========== Complex Tests ==========
-
     @Test
     fun `factorial calculation`() {
-        // Function factorial(n): if n <= 1 then 1 else n * factorial(n-1)
         val factBuilder = InstructionBuilder()
         
-        // Create labels for if-else
         val recursiveCaseLabel = factBuilder.createLabel("recursive_case")
         val afterIfLabel = factBuilder.createLabel("after_if")
         
-        // Load parameter n
-        factBuilder.emit(Opcodes.LOAD_LOCAL, 0)       // instruction 0
-        factBuilder.emit(Opcodes.PUSH_INT, 0)         // instruction 1 (constant 1)
-        factBuilder.emit(Opcodes.LE_INT)              // instruction 2 (n <= 1)
-        factBuilder.emitJump(Opcodes.JUMP_IF_FALSE, recursiveCaseLabel) // instruction 3
+        factBuilder.emit(Opcodes.LOAD_LOCAL, 0)
+        factBuilder.emit(Opcodes.PUSH_INT, 0)
+        factBuilder.emit(Opcodes.LE_INT)
+        factBuilder.emitJump(Opcodes.JUMP_IF_FALSE, recursiveCaseLabel)
         
-        // Base case: return 1
-        factBuilder.emit(Opcodes.PUSH_INT, 0)         // instruction 4
-        factBuilder.emit(Opcodes.RETURN)              // instruction 5
+        factBuilder.emit(Opcodes.PUSH_INT, 0)
+        factBuilder.emit(Opcodes.RETURN)
         
-        // Recursive case: n * factorial(n-1)
-        factBuilder.defineLabel(recursiveCaseLabel.name) // instruction 6
-        factBuilder.emit(Opcodes.LOAD_LOCAL, 0)       // instruction 6 (n for multiplication)
-        factBuilder.emit(Opcodes.LOAD_LOCAL, 0)       // instruction 7 (n for subtraction)
-        factBuilder.emit(Opcodes.PUSH_INT, 0)         // instruction 8 (constant 1)
-        factBuilder.emit(Opcodes.SUB_INT)             // instruction 9 (n - 1)
-        factBuilder.emit(Opcodes.CALL, 1)             // instruction 10 (factorial(n-1))
-        factBuilder.emit(Opcodes.MUL_INT)             // instruction 11 (n * factorial(n-1))
-        factBuilder.emit(Opcodes.RETURN)              // instruction 12
+        factBuilder.defineLabel(recursiveCaseLabel.name)
+        factBuilder.emit(Opcodes.LOAD_LOCAL, 0)
+        factBuilder.emit(Opcodes.LOAD_LOCAL, 0)
+        factBuilder.emit(Opcodes.PUSH_INT, 0)
+        factBuilder.emit(Opcodes.SUB_INT)
+        factBuilder.emit(Opcodes.CALL, 1)
+        factBuilder.emit(Opcodes.MUL_INT)
+        factBuilder.emit(Opcodes.RETURN)
         
-        factBuilder.defineLabel(afterIfLabel.name) // This label is never reached, but defined for consistency
+        factBuilder.defineLabel(afterIfLabel.name)
 
         val factFunction = createFunction(
             name = "factorial",
@@ -886,18 +847,17 @@ class VirtualMachineTest {
             instructions = factBuilder.build()
         )
 
-        // main: factorial(5)
         val mainBuilder = InstructionBuilder()
-        mainBuilder.emit(Opcodes.PUSH_INT, 1) // 5 (constant index 1)
-        mainBuilder.emit(Opcodes.CALL, 1) // factorial (function index 1)
-        mainBuilder.emit(Opcodes.POP) // remove result from stack
+        mainBuilder.emit(Opcodes.PUSH_INT, 1)
+        mainBuilder.emit(Opcodes.CALL, 1)
+        mainBuilder.emit(Opcodes.POP)
         mainBuilder.emit(Opcodes.RETURN_VOID)
 
         val mainFunction = createMainFunction(mainBuilder.build())
 
         val module = createModule(
             intConstants = listOf(1L, 5L),
-            functions = listOf(mainFunction, factFunction) // main=0, factorial=1
+            functions = listOf(mainFunction, factFunction)
         )
 
         val vm = VirtualMachine(module)
@@ -907,40 +867,32 @@ class VirtualMachineTest {
 
     @Test
     fun `simple loop`() {
-        // main: for i in 0..2: print i
         val builder = InstructionBuilder()
         
-        // Create labels for loop
         val loopStartLabel = builder.createLabel("loop_start")
         val exitLabel = builder.createLabel("exit")
         
-        // i = 0
-        builder.emit(Opcodes.PUSH_INT, 0) // instruction 0
-        builder.emit(Opcodes.STORE_LOCAL, 0) // instruction 1
+        builder.emit(Opcodes.PUSH_INT, 0)
+        builder.emit(Opcodes.STORE_LOCAL, 0)
         
-        // loop: if i > 2 then exit
-        builder.defineLabel(loopStartLabel.name) // instruction 2
-        builder.emit(Opcodes.LOAD_LOCAL, 0) // instruction 2: load i
-        builder.emit(Opcodes.PUSH_INT, 1) // instruction 3: constant 2
-        builder.emit(Opcodes.GT_INT) // instruction 4: i > 2
-        builder.emitJump(Opcodes.JUMP_IF_TRUE, exitLabel) // instruction 5
+        builder.defineLabel(loopStartLabel.name)
+        builder.emit(Opcodes.LOAD_LOCAL, 0)
+        builder.emit(Opcodes.PUSH_INT, 1)
+        builder.emit(Opcodes.GT_INT)
+        builder.emitJump(Opcodes.JUMP_IF_TRUE, exitLabel)
         
-        // print i
-        builder.emit(Opcodes.LOAD_LOCAL, 0) // instruction 6
-        builder.emit(Opcodes.PRINT) // instruction 7
+        builder.emit(Opcodes.LOAD_LOCAL, 0)
+        builder.emit(Opcodes.PRINT)
         
-        // i = i + 1
-        builder.emit(Opcodes.LOAD_LOCAL, 0) // instruction 8
-        builder.emit(Opcodes.PUSH_INT, 2) // instruction 9: constant 1
-        builder.emit(Opcodes.ADD_INT) // instruction 10
-        builder.emit(Opcodes.STORE_LOCAL, 0) // instruction 11
+        builder.emit(Opcodes.LOAD_LOCAL, 0)
+        builder.emit(Opcodes.PUSH_INT, 2)
+        builder.emit(Opcodes.ADD_INT)
+        builder.emit(Opcodes.STORE_LOCAL, 0)
         
-        // jump to loop start
-        builder.emitJump(Opcodes.JUMP, loopStartLabel) // instruction 12
+        builder.emitJump(Opcodes.JUMP, loopStartLabel)
         
-        // exit
-        builder.defineLabel(exitLabel.name) // instruction 13
-        builder.emit(Opcodes.RETURN_VOID) // instruction 13
+        builder.defineLabel(exitLabel.name)
+        builder.emit(Opcodes.RETURN_VOID)
 
         val module = createModule(
             intConstants = listOf(0L, 2L, 1L),
@@ -952,4 +904,3 @@ class VirtualMachineTest {
         assertEquals(VMResult.SUCCESS, result)
     }
 }
-

@@ -16,10 +16,8 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
     override fun analyze(program: Program): AnalysisResult {
         globalScope = Scope(parent = null)
 
-        // Инициализация встроенных функций
         initializeBuiltins(globalScope)
 
-        // First pass: declare all functions (forward declarations)
         for (stmt in program.statements) {
             if (stmt is FunctionDecl) {
                 val paramSymbols = mutableListOf<VariableSymbol>()
@@ -39,7 +37,6 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
             }
         }
 
-        // Second pass: analyze function bodies and other statements
         for (stmt in program.statements) {
             analyzeStatement(stmt, globalScope)
         }
@@ -59,14 +56,12 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
      * - printArray(value: array): void - печать массива (int[], float[], bool[])
      */
     private fun initializeBuiltins(scope: Scope) {
-        // print для примитивных типов (int, float, bool)
         scope.defineFunction(FunctionSymbol(
             name = "print",
             parameters = listOf(VariableSymbol("value", Type.Primitive)),
             returnType = Type.Void
         ))
 
-        // printArray для массивов (int[], float[], bool[])
         scope.defineFunction(FunctionSymbol(
             name = "printArray",
             parameters = listOf(VariableSymbol("value", Type.AnyArray)),
@@ -87,7 +82,6 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
     }
 
     private fun analyzeFunctionDecl(fn: FunctionDecl, scope: Scope) {
-        // Function is already declared in first pass, just get the symbol
         val fnSymbol = scope.resolveFunction(fn.identifier)
             ?: throw IllegalStateException("Function ${fn.identifier} should have been declared in first pass")
 
@@ -106,7 +100,6 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
 
         val functionScope = Scope(scope)
         
-        // Define parameters in function scope
         val paramSymbols = mutableListOf<VariableSymbol>()
         for (p in fn.parameters) {
             val pType = p.type.toSemanticType()
@@ -208,7 +201,7 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
                 "Return statement is not allowed outside of a function",
                 stmt.pos
             )
-            stmt.value?.let { analyzeExpression(it, scope) } // чтобы поймать ошибки внутри
+            stmt.value?.let { analyzeExpression(it, scope) }
             return
         }
 
@@ -415,7 +408,6 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
             )
         }
 
-        // Типы аргументов
         val argTypes = expr.args.map { analyzeExpression(it, scope) }
         val paramTypes = fn.parameters.map { it.type }
 
@@ -477,7 +469,6 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
     }
 
     private fun analyzeArrayInitExpr(expr: ArrayInitExpr, scope: Scope): Type {
-        // TODO: implement array initialization analysis
         return Type.Unknown
     }
 
@@ -492,13 +483,10 @@ class DefaultSemanticAnalyzer : SemanticAnalyzer {
         if (to == Type.Unknown || from == Type.Unknown) return true
         if (from == to) return true
         
-        // Специальная логика для встроенных функций
-        // Primitive принимает любой примитивный тип (int, float, bool)
         if (to == Type.Primitive) {
             return from == Type.Int || from == Type.Float || from == Type.Bool
         }
         
-        // AnyArray принимает любой массив
         if (to == Type.AnyArray) {
             return from is Type.Array
         }

@@ -80,13 +80,11 @@ class E2ETest {
         val module = compileFile("src/test/resources/merge_sort.lang")
         val iterations = 3
         
-        // Warm up JVM
         VirtualMachine(module, null).execute()
         BytecodeOptimizerJIT(module, threshold = 10).use { jit ->
             VirtualMachine(module, jit).execute()
         }
         
-        // Measure execution time without JIT
         val timesWithoutJIT = mutableListOf<Long>()
         for (i in 1..iterations) {
             val startTime = System.nanoTime()
@@ -97,7 +95,6 @@ class E2ETest {
             timesWithoutJIT.add(endTime - startTime)
         }
         
-        // Measure execution time with JIT
         val timesWithJIT = mutableListOf<Long>()
         BytecodeOptimizerJIT(module, threshold = 10).use { jit ->
             for (i in 1..iterations) {
@@ -111,19 +108,16 @@ class E2ETest {
             
         }
         
-        // Calculate averages
         val avgWithoutJIT = timesWithoutJIT.average()
         val avgWithJIT = timesWithJIT.average()
         val speedup = avgWithoutJIT / avgWithJIT
         
-        // Print results
         println("\n=== Performance Comparison (averaged over $iterations runs) ===")
         println("Without JIT: ${String.format("%.2f", avgWithoutJIT / 1_000_000.0)} ms")
         println("With JIT:   ${String.format("%.2f", avgWithJIT / 1_000_000.0)} ms")
         println("Speedup:    ${String.format("%.2f", speedup)}x")
         println()
         
-        // Test should pass regardless of performance, but we can assert that JIT doesn't break execution
         assertTrue(avgWithJIT > 0, "JIT execution time should be positive")
         assertTrue(avgWithoutJIT > 0, "Non-JIT execution time should be positive")
     }
@@ -133,11 +127,9 @@ class E2ETest {
         val module = compileFile("src/test/resources/heap_cleanup_test.lang")
         val vm = VirtualMachine(module, null)
         
-        // Execute the program
         val result = vm.execute()
         assertEquals(VMResult.SUCCESS, result, "VM execution should succeed")
         
-        // After execution, heap should be cleared (all objects freed)
         val heapObjectCount = vm.getHeapObjectCount()
         assertEquals(0, heapObjectCount, "Heap should be empty after program completion")
     }

@@ -24,7 +24,6 @@ object BytecodePrinter {
         println("Entry Point: ${module.entryPoint}")
         println()
         
-        // Print constant pools
         if (module.intConstants.isNotEmpty()) {
             println("Integer Constants:")
             module.intConstants.forEachIndexed { index, value ->
@@ -41,7 +40,6 @@ object BytecodePrinter {
             println()
         }
         
-        // Print functions
         println("Functions (${module.functions.size}):")
         module.functions.forEachIndexed { index, function ->
             println()
@@ -56,7 +54,6 @@ object BytecodePrinter {
         val indexStr = if (functionIndex >= 0) "[$functionIndex] " else ""
         println("$indexStr${function.name}(")
         
-        // Print parameters
         if (function.parameters.isNotEmpty()) {
             function.parameters.forEachIndexed { i, param ->
                 val comma = if (i < function.parameters.size - 1) "," else ""
@@ -67,7 +64,6 @@ object BytecodePrinter {
         println("  Locals: ${function.localsCount}")
         println()
         
-        // Disassemble instructions
         println("  Instructions:")
         disassembleInstructions(function.instructions).forEach { line ->
             println("    $line")
@@ -85,7 +81,6 @@ object BytecodePrinter {
         while (address * 4 < instructions.size) {
             val byteIndex = address * 4
             if (byteIndex + 3 >= instructions.size) {
-                // Incomplete instruction
                 result.add("${String.format("%04d", address)}: <incomplete instruction>")
                 break
             }
@@ -178,28 +173,20 @@ object BytecodePrinter {
         val opcodeInt = opcode.toInt() and 0xFF
         
         return when (opcodeInt) {
-            0x03 -> { // PUSH_BOOL
+            0x03 -> {
                 if (operand == 0) "false" else "true"
             }
             0x01, 0x02, 0x10, 0x11, 0x12, 0x13, 0x80, 0x90, 0x91, 0x94 -> {
-                // Instructions that use indices
                 "#$operand"
             }
             0x14 -> {
-                // ADD_LOCAL_IMMEDIATE: operand = (localIndex << 16) | (constIndex & 0xFFFF)
                 val localIndex = (operand shr 16) and 0xFFFF
                 val constIndex = operand and 0xFFFF
                 "#$localIndex, const#$constIndex"
             }
             0x70, 0x71, 0x72 -> {
-                // Jump instructions - convert relative offset to absolute address
-                // VM uses: newPC = frame.pc + (signedOperand * 4) + 4, then frame.pc = newPC - 4
-                // frame.pc is byte address, currentAddress is instruction number
-                // currentByteAddr = currentAddress * 4
-                // newByteAddr = currentByteAddr + (operand * 4) + 4
-                // newInstructionAddr = (newByteAddr - 4) / 4 = currentAddress + operand
                 val signedOperand = if (operand and 0x800000 != 0) {
-                    operand or 0xFF000000.toInt() // Sign extension
+                    operand or 0xFF000000.toInt()
                 } else {
                     operand
                 }

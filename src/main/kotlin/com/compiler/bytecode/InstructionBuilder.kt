@@ -8,13 +8,12 @@ package com.compiler.bytecode
 class InstructionBuilder {
     private val instructions = mutableListOf<Byte>()
     
-    // Label system for forward references
-    private val labels = mutableMapOf<String, Int>() // label name -> instruction address
-    private val forwardReferences = mutableListOf<ForwardReference>() // pending references to resolve
+    private val labels = mutableMapOf<String, Int>()
+    private val forwardReferences = mutableListOf<ForwardReference>()
     
     private data class ForwardReference(
-        val instructionAddress: Int, // address of instruction with forward reference
-        val labelName: String // label to resolve
+        val instructionAddress: Int,
+        val labelName: String
     )
     
     /**
@@ -24,7 +23,6 @@ class InstructionBuilder {
     fun defineLabel(name: String) {
         val address = currentAddress()
         labels[name] = address
-        // Resolve any forward references to this label
         resolveForwardReferences(name, address)
     }
     
@@ -55,7 +53,6 @@ class InstructionBuilder {
      */
     fun emit(opcode: Byte, operand: Int = 0) {
         instructions.add(opcode)
-        // Operand is written as 3 bytes (big-endian)
         instructions.add(((operand shr 16) and 0xFF).toByte())
         instructions.add(((operand shr 8) and 0xFF).toByte())
         instructions.add((operand and 0xFF).toByte())
@@ -68,12 +65,10 @@ class InstructionBuilder {
     fun emitJump(opcode: Byte, label: Label) {
         val currentAddr = currentAddress()
         if (label.name in labels) {
-            // Label already defined, calculate offset immediately
             val targetAddr = labels[label.name]!!
             val offset = targetAddr - currentAddr
             emit(opcode, offset)
         } else {
-            // Forward reference - emit with 0, will patch later
             emit(opcode, 0)
             forwardReferences.add(ForwardReference(currentAddr, label.name))
         }

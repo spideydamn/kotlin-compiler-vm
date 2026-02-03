@@ -13,18 +13,14 @@ class BytecodeGenerator(
     private val program: Program,
     private val globalScope: Scope
 ) {
-    // Constant pool
     private val intConstants = mutableListOf<Long>()
     private val floatConstants = mutableListOf<Double>()
     private val constantIndices = mutableMapOf<Any, Int>()
     
-    // Compiled functions
     private val compiledFunctions = mutableListOf<CompiledFunction>()
     
-    // Function information for call resolution
     private val functionIndices = mutableMapOf<String, Int>()
     
-    // Operator to opcode mapping
     private data class OpcodePair(val intOp: Byte, val floatOp: Byte)
     
     private val arithmeticOps = mapOf(
@@ -54,10 +50,9 @@ class BytecodeGenerator(
         TypeNode.BoolType::class to Opcodes.NEW_ARRAY_BOOL
     )
     
-    // Current generation context
     private data class FunctionContext(
         val function: FunctionSymbol,
-        val localVars: MutableMap<String, Int>, // name -> local variable index
+        val localVars: MutableMap<String, Int>,
         val builder: InstructionBuilder
     )
     
@@ -67,10 +62,8 @@ class BytecodeGenerator(
      * Generates a bytecode module from the program.
      */
     fun generate(): BytecodeModule {
-        // First, collect all functions for call resolution
         collectFunctions()
         
-        // Generate bytecode for each function
         for (stmt in program.statements) {
             if (stmt is FunctionDecl) {
                 generateFunction(stmt)
@@ -110,7 +103,6 @@ class BytecodeGenerator(
         val builder = InstructionBuilder()
         val localVars = mutableMapOf<String, Int>()
         
-        // Parameters occupy the first indices
         var localIndex = 0
         for (param in decl.parameters) {
             localVars[param.identifier] = localIndex++
@@ -119,14 +111,11 @@ class BytecodeGenerator(
         val prevContext = currentContext
         currentContext = FunctionContext(fnSymbol, localVars, builder)
         
-        // Generate function body
         generateBlock(decl.body, localVars, localIndex)
         
-        // Check if function ends with return statement
         val lastOpcode = builder.getLastOpcode()
         val endsWithReturn = lastOpcode != null && (lastOpcode == Opcodes.RETURN || lastOpcode == Opcodes.RETURN_VOID)
         
-        // If void function doesn't end with return, add RETURN_VOID
         if (decl.returnType is TypeNode.VoidType && !endsWithReturn) {
             builder.emit(Opcodes.RETURN_VOID)
         }
@@ -176,8 +165,6 @@ class BytecodeGenerator(
             
             is ExprStmt -> {
                 generateExpression(stmt.expr)
-                // Only POP if the expression leaves a value on the stack
-                // (AssignExpr and void CallExpr don't leave values)
                 if (expressionLeavesValueOnStack(stmt.expr)) {
                     ctx.builder.emit(Opcodes.POP)
                 }
@@ -186,7 +173,6 @@ class BytecodeGenerator(
             is IfStmt -> {
                 generateExpression(stmt.condition)
                 
-                // Create labels for jump targets
                 val elseLabel = if (stmt.elseBranch != null) {
                     ctx.builder.createLabel("else_${ctx.builder.currentAddress()}")
                 } else {
@@ -194,41 +180,33 @@ class BytecodeGenerator(
                 }
                 val afterIfLabel = ctx.builder.createLabel("after_if_${ctx.builder.currentAddress()}")
                 
-                // Emit conditional jump - will resolve label when it's defined
                 if (elseLabel != null) {
                     ctx.builder.emitJump(Opcodes.JUMP_IF_FALSE, elseLabel)
                 } else {
                     ctx.builder.emitJump(Opcodes.JUMP_IF_FALSE, afterIfLabel)
                 }
                 
-                // Generate then branch
                 generateBlock(stmt.thenBranch, localVars, localIndex)
                 
-                // Check if then branch ends with return - if so, no need for JUMP
                 val thenEndsWithReturn = ctx.builder.getLastOpcode()?.let { 
                     it == Opcodes.RETURN || it == Opcodes.RETURN_VOID 
                 } ?: false
                 
-                // Emit unconditional jump to skip else branch (if needed)
                 if (stmt.elseBranch != null && !thenEndsWithReturn) {
                     ctx.builder.emitJump(Opcodes.JUMP, afterIfLabel)
                 }
                 
-                // Define else branch label and generate else branch
                 if (stmt.elseBranch != null && elseLabel != null) {
                     ctx.builder.defineLabel(elseLabel.name)
                     generateBlock(stmt.elseBranch, localVars, localIndex)
                 }
                 
-                // Define label after if statement
                 ctx.builder.defineLabel(afterIfLabel.name)
             }
             
             is ForStmt -> {
-                // Create labels for loop control
                 val loopStartLabel = ctx.builder.createLabel("loop_start_${ctx.builder.currentAddress()}")
                 
-                // Initializer
                 when (val init = stmt.initializer) {
                     is ForVarInit -> {
                         generateExpression(init.decl.expression)
@@ -239,7 +217,6 @@ class BytecodeGenerator(
                     }
                     is ForExprInit -> {
                         generateExpression(init.expr)
-                        // Only POP if the expression leaves a value on the stack
                         if (expressionLeavesValueOnStack(init.expr)) {
                             ctx.builder.emit(Opcodes.POP)
                         }
@@ -249,47 +226,36 @@ class BytecodeGenerator(
                     }
                 }
                 
-                // Define loop start label
                 ctx.builder.defineLabel(loopStartLabel.name)
                 
-                // Condition
                 if (stmt.condition != null) {
                     val afterLoopLabel = ctx.builder.createLabel("after_loop_${ctx.builder.currentAddress()}")
                     generateExpression(stmt.condition)
                     ctx.builder.emitJump(Opcodes.JUMP_IF_FALSE, afterLoopLabel)
                     
-                    // Loop body
                     localIndex = generateBlock(stmt.body, localVars, localIndex)
                     
-                    // Increment
                     if (stmt.increment != null) {
                         generateExpression(stmt.increment)
-                        // Only POP if the expression leaves a value on the stack
                         if (expressionLeavesValueOnStack(stmt.increment)) {
                             ctx.builder.emit(Opcodes.POP)
                         }
                     }
                     
-                    // Jump back to loop start
                     ctx.builder.emitJump(Opcodes.JUMP, loopStartLabel)
                     
-                    // Define label after loop
                     ctx.builder.defineLabel(afterLoopLabel.name)
                 } else {
-                    // Infinite loop - no condition, no exit label needed
                     localIndex = generateBlock(stmt.body, localVars, localIndex)
                     
                     if (stmt.increment != null) {
                         generateExpression(stmt.increment)
-                        // Only POP if the expression leaves a value on the stack
                         if (expressionLeavesValueOnStack(stmt.increment)) {
                             ctx.builder.emit(Opcodes.POP)
                         }
                     }
                     
-                    // Jump back to loop start
                     ctx.builder.emitJump(Opcodes.JUMP, loopStartLabel)
-                    // Note: No afterLoopLabel for infinite loops - they never exit
                 }
             }
             
@@ -320,18 +286,16 @@ class BytecodeGenerator(
      */
     private fun expressionLeavesValueOnStack(expr: Expression): Boolean {
         return when (expr) {
-            is AssignExpr -> false // AssignExpr uses STORE_LOCAL/ARRAY_STORE which consume the value
+            is AssignExpr -> false
             is CallExpr -> {
                 val fnSymbol = globalScope.resolveFunction(expr.name)
                 if (fnSymbol != null) {
-                    // Built-in functions print/printArray are void and don't leave value
-                    // Regular void functions also don't leave value (they use RETURN_VOID)
                     fnSymbol.returnType != com.compiler.semantic.Type.Void
                 } else {
-                    true // Unknown function, assume it returns a value
+                    true
                 }
             }
-            else -> true // Other expressions (literals, variables, binary ops, etc.) leave values
+            else -> true
         }
     }
     
@@ -364,7 +328,6 @@ class BytecodeGenerator(
             is BinaryExpr -> {
                 when (expr.operator) {
                     TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH, TokenType.PERCENT -> {
-                        // Arithmetic operations return the type of operands
                         inferExpressionType(expr.left)
                     }
                     TokenType.EQ, TokenType.NE, TokenType.LT, TokenType.LE, TokenType.GT, TokenType.GE,
@@ -393,7 +356,6 @@ class BytecodeGenerator(
      * Resolves a variable in the current function context.
      */
     private fun resolveVariableInCurrentScope(name: String): VariableSymbol? {
-        // First search in global scope
         return globalScope.resolveVariable(name)
     }
     
@@ -488,7 +450,6 @@ class BytecodeGenerator(
                         ctx.builder.emit(Opcodes.STORE_LOCAL, varIndex)
                     }
                     is ArrayAccessExpr -> {
-                        // For ARRAY_STORE we need order: array, index, value
                         generateExpression(target.array)
                         generateExpression(target.index)
                         generateExpression(expr.value)
@@ -498,12 +459,10 @@ class BytecodeGenerator(
             }
             
             is CallExpr -> {
-                // Generate arguments (in declaration order)
                 for (arg in expr.args) {
                     generateExpression(arg)
                 }
                 
-                // Check if this is a built-in function
                 val builtinOpcode = builtinFunctions[expr.name]
                 if (builtinOpcode != null) {
                     ctx.builder.emit(builtinOpcode)

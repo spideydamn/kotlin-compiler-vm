@@ -4,16 +4,24 @@ package com.compiler.parser.ast
  * Представление типа в языке. Может быть примитивным (int/float/bool/void) или составным (массив).
  */
 sealed class TypeNode : ASTNode() {
-    /** Целочисленный тип (signed 64-bit). */
+    /** 
+     * Целочисленный тип (signed 64-bit). 
+     */
     object IntType : TypeNode()
 
-    /** Тип с плавающей точкой (double precision). */
+    /** 
+     * Тип с плавающей точкой (double precision). 
+     */
     object FloatType : TypeNode()
 
-    /** Булев тип. */
+    /** 
+     * Булев тип. 
+     */
     object BoolType : TypeNode()
 
-    /** Void-тип (используется для функций, не возвращающих значение). */
+    /** 
+     * Void-тип (используется для функций, не возвращающих значение). 
+     */
     object VoidType : TypeNode()
 
     /**
